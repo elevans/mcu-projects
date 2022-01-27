@@ -24,6 +24,8 @@ uint8_t sensorSelect = 1;
 uint8_t unitButtonState = 0;
 uint8_t lastUnitButtonState = 0;
 uint8_t unitSelect = 0;
+uint8_t sensorCnt = 0;
+uint8_t unitCnt = 0;
 double temp = 0;
 double hum = 0;
 double f_temp = 1;
@@ -125,30 +127,31 @@ void loop() {
   // read button state
   sensorButtonState = digitalRead(sensorButtonPin);
   unitButtonState = digitalRead(unitButtonPin);
-
-  // sense sensor state change
-  if (sensorButtonState != lastSensorButtonState) {
-    if (sensorButtonState == 1) {
-      if (sensorSelect == 1) {
-        sensorSelect = 2;
-      } else {
-        sensorSelect = 1;
-      }
+  
+  // iterate sensorCnt and output the other sensor data
+  if (sensorButtonState == 1) {
+    sensorCnt = sensorCnt + 1;
+    if (sensorCnt == 1) {
+      sensorSelect = 2;
+    } else {
+      sensorSelect = 1;
+      sensorCnt = 0;
     }
-    lastSensorButtonState = sensorButtonState;
+  }
+  // sense unit change
+  if (unitButtonState == 1) {
+    unitCnt = unitCnt + 1;
+    if (unitCnt == 1) {
+      unitSelect = 2;
+    } else {
+      unitSelect = 1;
+      unitCnt = 0;
+    }
   }
 
-  // sense unit change
-  if (unitButtonState != lastUnitButtonState) {
-    if (unitButtonState == 1) {
-      if (unitSelect == 1) {
-        unitSelect = 2;
-      } else {
-        unitSelect = 1;
-      }
-    }
-    lastUnitButtonState = unitButtonState;
-  }  
   displayTempHum(0, sensorSelect, unitSelect);
-  delay(50);
+  
+  //50 was really fast... 500 is still updating 2x per second. 
+  //You'll have to test this delay a bit as you don't want to compete with your button push speed :)
+  delay(500);
 }
