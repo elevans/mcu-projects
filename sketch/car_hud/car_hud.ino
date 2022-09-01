@@ -16,7 +16,7 @@ ClosedCube_HDC1080 hdc1080_i;
 ClosedCube_HDC1080 hdc1080_o;
 
 const uint8_t sensorButtonPin = 2;
-const uint8_t unitButtonPin = 4;
+const uint8_t unitButtonPin = 3;
 
 uint8_t sensorButtonState = 0;
 uint8_t lastSensorButtonState = 0;
@@ -122,11 +122,8 @@ void setup() {
   }
 
 void loop() {
-  // read button state
-  sensorButtonState = digitalRead(sensorButtonPin);
-  unitButtonState = digitalRead(unitButtonPin);
-
   // sense sensor state change
+  sensorButtonState = digitalRead(sensorButtonPin);
   if (sensorButtonState != lastSensorButtonState) {
     if (sensorButtonState == 1) {
       if (sensorSelect == 1) {
@@ -139,6 +136,7 @@ void loop() {
   }
 
   // sense unit change
+  unitButtonState = digitalRead(unitButtonPin);
   if (unitButtonState != lastUnitButtonState) {
     if (unitButtonState == 1) {
       if (unitSelect == 1) {
