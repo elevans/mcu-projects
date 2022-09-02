@@ -1,14 +1,15 @@
 import framebuf
 from machine import Pin, I2C
 from display import SSD1306_I2C
+from micropython import const
 
 # set constants
-DISPLAY_WIDTH = 128
-DISPLAY_HEIGHT = 32
-MULTIPLEXER_ADDR = 0x70
-MULTIPLEXER_SCL = 15
-MULTIPLEXER_SDA = 14
-FREQ = 400000
+DISPLAY_WIDTH = const(128)
+DISPLAY_HEIGHT = const(32)
+MULTIPLEXER_ADDR = const(0x70)
+MULTIPLEXER_SCL = const(15)
+MULTIPLEXER_SDA = const(14)
+FREQ = const(400000)
 
 # setup i2c devices
 i2c_multiplexer = I2C(1, scl=MULTIPLEXER_SCL, sda=MULTIPLEXER_SDA, freq=FREQ)
