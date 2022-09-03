@@ -24,7 +24,7 @@ class HDC1080():
         """
         self.i2c.writeto_mem(HDC1080_ADDRESS, HDC1080_CONFIG_REG, bytearray([1 << 4]))
 
-    def get_temp(self, unit=None):
+    def get_temp(self, unit="c"):
         """
         Get temperature measurement in Celcius or Fahrenheiht.
         """
@@ -32,10 +32,10 @@ class HDC1080():
         self.i2c.writeto(HDC1080_ADDRESS, bytearray([HDC1080_TEMP_REG]))
         time.sleep(0.0635)
         value = int.from_bytes(self.i2c.readfrom(HDC1080_ADDRESS, 2), "big")
+        if unit.lower() == "c":
+            return (value / 2 ** 16) * 156 - 40
         if unit.lower() == "f":
             return (value * 1.8 / (2 ** 16)) * 165 - 40
-        else:
-            return (value / 2 ** 16) * 156 - 40
 
     def get_hum(self):
         """
