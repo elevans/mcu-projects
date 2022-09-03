@@ -24,7 +24,7 @@ class HDC1080():
         """
         self.i2c.writeto_mem(HDC1080_ADDRESS, HDC1080_CONFIG_REG, bytearray([1 << 4]))
 
-    def get_temp(self, unit="c"):
+    def get_temp(self, unit=None):
         """
         Get temperature measurement in Celcius or Fahrenheiht.
         """
