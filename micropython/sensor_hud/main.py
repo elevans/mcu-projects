@@ -1,6 +1,8 @@
 import framebuf
 import sensors
 import time
+import bookerly_15
+from write import Write
 from machine import Pin, I2C
 from display import SSD1306_I2C
 from micropython import const
@@ -92,20 +94,23 @@ while True:
     # display sensor data
     select_mux_channel(0)
     display_1.fill(0)
+    writer = Write(display_1, bookerly_15)
     if sensor_selected == 1:
         if mode_selected == 1:
-            display_1.text(f"Ti: {temp}C", 0, 0)
-            display_1.text(f"Hum: {hum}%", 0, 12)
+            writer.text("Ti:", 0, 1)
+            writer.text(f"{temp}C", 64, 1)
+            writer.text("Hum", 0, 16)
+            writer.text(f"{hum}%", 64, 16)
         if mode_selected == 2:
-            display_1.text(f"Ti: {temp}F", 0, 0)
-            display_1.text(f"Hum: {hum}%", 0, 12)
+            writer.text(f"Ti: {temp}F", 0, 1)
+            writer.text(f"Hum: {hum}%", 0, 16)
     if sensor_selected == 2:
         if mode_selected == 1:
-            display_1.text(f"To: {temp}C", 0, 0)
-            display_1.text(f"Hum: {hum}%", 0, 12)
+            writer.text(f"To: {temp}C", 0, 1)
+            writer.text(f"Hum: {hum}%", 0, 16)
         if mode_selected == 2:
-            display_1.text(f"To: {temp}F", 0, 0)
-            display_1.text(f"Hum: {hum}%", 0, 12)
+            writer.text(f"To: {temp}F", 0, 1)
+            writer.text(f"Hum: {hum}%", 0, 16)
     display_1.show()
 
     # read button states
