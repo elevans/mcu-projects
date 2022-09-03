@@ -1,10 +1,9 @@
 import framebuf
 import sensors
 import time
-import bookerly_15
-from write import Write
+import bookerly_15, ubuntu_condensed_12
 from machine import Pin, I2C
-from display import SSD1306_I2C
+from display import SSD1306_I2C, FontWriter
 from micropython import const
 
 # set constants
@@ -64,6 +63,10 @@ sensor_temp_hum_1 = sensors.HDC1080(i2c_multiplexer)
 select_mux_channel(2)
 sensor_temp_hum_2 = sensors.HDC1080(i2c_multiplexer)
 
+# initialize display writer
+writer12 = FontWriter(display_1, ubuntu_condensed_12)
+writer15 = FontWriter(display_1, bookerly_15)
+
 while True:
     # read button states
     button_sensor_select_state = button_sensor_select.value()
@@ -94,23 +97,24 @@ while True:
     # display sensor data
     select_mux_channel(0)
     display_1.fill(0)
-    writer = Write(display_1, bookerly_15)
     if sensor_selected == 1:
+        writer15.text(f"T", 0, 0)
+        writer12.text("(inside):", 10, 4)
         if mode_selected == 1:
-            writer.text("Ti:", 0, 1)
-            writer.text(f"{temp}C", 64, 1)
-            writer.text("Hum", 0, 16)
-            writer.text(f"{hum}%", 64, 16)
+            writer15.text(f"{temp}C", 75, 1)
         if mode_selected == 2:
-            writer.text(f"Ti: {temp}F", 0, 1)
-            writer.text(f"Hum: {hum}%", 0, 16)
+            writer15.text(f"{temp}F", 75, 1)
+        writer15.text("RH:", 0, 16)
+        writer15.text(f"{hum}%", 75, 16)
     if sensor_selected == 2:
+        writer15.text(f"T", 0, 0)
+        writer12.text("(outside):", 10, 4)
         if mode_selected == 1:
-            writer.text(f"To: {temp}C", 0, 1)
-            writer.text(f"Hum: {hum}%", 0, 16)
+            writer15.text(f"{temp}C", 75, 1)
         if mode_selected == 2:
-            writer.text(f"To: {temp}F", 0, 1)
-            writer.text(f"Hum: {hum}%", 0, 16)
+            writer15.text(f"{temp}F", 75, 1)
+        writer15.text("RH:", 0, 16)
+        writer15.text(f"{hum}%", 75, 16)
     display_1.show()
 
     # read button states

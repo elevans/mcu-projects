@@ -1,10 +1,6 @@
 import time
-# import framebuf
-try:
-    import framebuf
-except:
-    def const(x): return x
-
+import framebuf
+from micropython import const
 
 # register definitions
 SET_CONTRAST = const(0x81)
@@ -168,3 +164,55 @@ class SSD1306_SPI(SSD1306):
         self.res.low()
         time.sleep_ms(10)
         self.res.high()
+
+class FontWriter:
+    def __init__(self, buffer, font):
+        self.buffer = buffer
+        self.font = font._FONT
+
+    def text(self, string, x=0, y=0, color=0xffff, bgcolor=0, colors=None):
+        buffer = self.buffer
+        font = self.font
+
+        if colors is None:
+            colors = (color, color, bgcolor, bgcolor)
+
+        for c in string:
+
+            if not ord(c) in font.keys():
+                c = "?"
+
+            row = y
+            _w, * _font = font[ord(c)]
+            for byte in _font:
+                unsalted = byte
+                for col in range(x, x + _w):
+                    color = colors[unsalted & 0x03]
+                    if color is not None:
+                        buffer.pixel(col, row, color)
+                    unsalted >>= 2
+                row += 1
+            x += _w
+
+    def char(self, c, x=0, y=0, color=0xffff, bgcolor=0, colors=None):
+        buffer = self.buffer
+        font = self.font
+
+        if colors is None:
+            colors = (color, color, bgcolor, bgcolor)
+
+        # for c in string:
+        if not c in font.keys():
+            return 0
+
+        row = y
+        _w, * _font = font[c]
+        for byte in _font:
+            unsalted = byte
+            for col in range(x, x + _w):
+                color = colors[unsalted & 0x03]
+                if color is not None:
+                    buffer.pixel(col, row, color)
+                unsalted >>= 2
+            row += 1
+        x += _w
