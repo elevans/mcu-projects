@@ -1,3 +1,3 @@
-# arduino-projects
-A place to store the fun arduino code and project details that I like to do on my free time.
+# mcu-projects
 
+This repository contains various microcontrolluer unit (MCU) projects. The arduino and micropython folders contain their respecive projects. Typically I use an Arduino Nano and Raspberry Pi Pico.
