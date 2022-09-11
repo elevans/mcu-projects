@@ -230,19 +230,20 @@ class Graphics:
         """
         self.width = width
         self.height = height
-        self._pixel = pixel
-        # Default to slow horizontal & vertical line implementations if no
-        # faster versions are provided.
-        if hline is None:
-            self.hline = self._slow_hline
-        else:
-            self.hline = hline
-        if vline is None:
-            self.vline = self._slow_vline
-        else:
-            self.vline = vline
+        self.display = display
+        self._pixel = display.pixel
 
-    def _slow_hline(self, x0, y0, width, *args, **kwargs):
+    def draw_bytes(self, image: bytearray):
+        """
+        Draw an image (in a byte array/buffer) on the display.
+
+        :param image: Image to display in bytes (i.e. bytearray()).
+        """
+        fb = framebuf.FrameBuffer(image, self.width, self.height, framebuf.MVLSB)
+        self.display.fill(0)
+        self.display.blit(fb, 8, 0)
+
+    def hline(self, x0, y0, width, *args, **kwargs):
         # Slow implementation of a horizontal line using pixel drawing.
         # This is used as the default horizontal line if no faster override
         # is provided.
@@ -251,7 +252,7 @@ class Graphics:
         for i in range(width):
             self._pixel(x0 + i, y0, *args, **kwargs)
 
-    def _slow_vline(self, x0, y0, height, *args, **kwargs):
+    def vline(self, x0, y0, height, *args, **kwargs):
         # Slow implementation of a vertical line using pixel drawing.
         # This is used as the default vertical line if no faster override
         # is provided.
