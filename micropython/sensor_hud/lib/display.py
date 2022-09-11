@@ -217,27 +217,17 @@ class FontWriter:
             row += 1
         x += _w
 
+
 class Graphics:
-    """
-    Creates an instance of the Graphics library. This is a port based of the 
-    Adafruit GFX Arduino library.
-    """
-    def __init__(self, width, height, pixel, hline=None, vline=None):
-        # Create an instance of the GFX drawing class.  You must pass in the
-        # following parameters:
-        #  - width = The width of the drawing area in pixels.
-        #  - height = The height of the drawing area in pixels.
-        #  - pixel = A function to call when a pixel is drawn on the display.
-        #            This function should take at least an x and y position
-        #            and then any number of optional color or other parameters.
-        #  You can also provide the following optional keyword argument to
-        #  improve the performance of drawing:
-        #  - hline = A function to quickly draw a horizontal line on the display.
-        #            This should take at least an x, y, and width parameter and
-        #            any number of optional color or other parameters.
-        #  - vline = A function to quickly draw a vertical line on the display.
-        #            This should take at least an x, y, and height paraemter and
-        #            any number of optional color or other parameters.
+    def __init__(self, width, height, display):
+        """
+        Creates an instance of the Graphics library. This is a port based of the
+        Adafruit GFX Arduino library.
+
+        :param width: Width of the drawing area in pixels.
+        :param height: Height of the drawing area in pixels.
+        :param display: Instance of a display or buffer (e.g. machine.I2C).
+        """
         self.width = width
         self.height = height
         self._pixel = pixel
