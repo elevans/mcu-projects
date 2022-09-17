@@ -108,11 +108,13 @@ class SSD1306(framebuf.FrameBuffer):
 
 
 class SSD1306_I2C(SSD1306):
-    def __init__(self, width, height, i2c, addr=SSD1306_ADDRESS, external_vcc=False):
+    def __init__(self, width, height, i2c, addr=SSD1306_ADDRESS, external_vcc=False, graphics=True):
         self.i2c = i2c
         self.addr = addr
         self.temp = bytearray(2)
+        self.graphics = self.init_graphics()
         self.write_list = [b"\x40", None]  # Co=0, D/C#=1
+        self._enable_graphics = False
         super().__init__(width, height, external_vcc)
 
     def write_cmd(self, cmd):
@@ -123,6 +125,12 @@ class SSD1306_I2C(SSD1306):
     def write_data(self, buf):
         self.write_list[1] = buf
         self.i2c.writevto(self.addr, self.write_list)
+
+    def init_graphics(self):
+        if self._enable_graphics:
+            return Graphics(width=self.width, height=self.height, display=self.i2c)
+        else:
+            return None
 
 
 class SSD1306_SPI(SSD1306):
@@ -239,6 +247,7 @@ class Graphics:
 
         :param image: Image to display in bytes (i.e. bytearray()).
         """
+        # TODO time draw_bytes and then use dsp_ref = self.display() and see if faster
         fb = framebuf.FrameBuffer(image, self.width, self.height, framebuf.MVLSB)
         self.display.fill(0)
         self.display.blit(fb, 8, 0)

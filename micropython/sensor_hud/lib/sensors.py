@@ -12,7 +12,10 @@ HDC1080_SERIAL_ID_FIRST = const(0xFB)
 HDC1080_SERIAL_ID_MID = const(0xFC)
 HDC1080_SERIAL_ID_LAST = const(0xFD)
 
-class HDC1080():
+class HDC1080:
+    """
+    HDC1080 Texas Instruments Temperature/Humidity sensor.
+    """
     def __init__(self, i2c):
         self.i2c = i2c
         self.init_device()
@@ -46,3 +49,10 @@ class HDC1080():
         time.sleep(0.065)
         value = int.from_bytes(self.i2c.readfrom(HDC1080_ADDRESS, 2), "big")
         return (value / 2 ** 16) * 100
+
+class LSM303DLHC:
+    """
+    """
+    def __init__(self, i2c):
+        self.i2c = i2c
+        return
