@@ -23,7 +23,7 @@ DISPLAY_WIDTH = const(128)
 DISPLAY_HEIGHT = const(32)
 
 class Multiplexer:
-    def __init__(self, i2c_id: int, scl_pin: Pin, sda_pin: Pin, freq: int=FREQUENCY_STANDARD):
+    def __init__(self, i2c_id: int, scl_pin: Pin, sda_pin: Pin, freq: int=FREQUENCY_FAST):
         """Multiplexer helper methods.
 
         Adds helpful multiplexer control methods (e.g. next_device()) and
@@ -42,10 +42,10 @@ class Multiplexer:
         self.active_channels = [] # list of active channels - for valid channel options
         self.inactive_channels = [] # list of inactive channels - for skpping
         self.current_channel = 0 # current channel selected on multiplexer
-        self.connected_devices = {} # dict that stores device instances, keys are channel
-        self._initialized = False # multiplexer init complete?
+        self.connected_device = {} # dict that stores device instances, keys are channel
         self.multiplexer = None # access to the multiplexer itself
         self.connected_device_id = {} # dict that stores device id, keys are channel
+        self._initialized = False # multiplexer init complete?
         self._init_multiplexer()
 
     def select_channel(self, channel: int):
@@ -59,7 +59,7 @@ class Multiplexer:
         self.current_channel = channel
 
         if self._initialized:
-            self.device = self.connected_devices[self.current_channel]
+            self.device = self.connected_device[self.current_channel]
 
     def next_device(self):
         """
@@ -101,7 +101,8 @@ class Multiplexer:
         Added the deivce address to the device library to connect the
         desired device. This method expects one device per channel.
         """
-        for i in range(8):
+        r = range(8)
+        for i in r:
             self.select_channel(i)
             scan_result = self.multiplexer.scan() # [60, 112]
             for address in DEVICE_LIBRARY:
@@ -120,10 +121,9 @@ class Multiplexer:
         if address == SSD1306_ADDRESS:
             device = display.SSD1306_I2C(DISPLAY_WIDTH, DISPLAY_HEIGHT, self.multiplexer)
             device.fill(0)
-            self.connected_devices[self.current_channel] = device
+            self.connected_device[self.current_channel] = device
         
         # initialize sensors (hdc1080)
         if address == HDC1080_ADDRESS:
             device = sensors.HDC1080(self.multiplexer)
-            self.connected_devices[self.current_channel] = device
-
+            self.connected_device[self.current_channel] = device
