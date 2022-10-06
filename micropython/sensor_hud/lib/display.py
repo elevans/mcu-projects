@@ -1,4 +1,3 @@
-import time
 import framebuf
 from micropython import const
 
@@ -108,216 +107,23 @@ class SSD1306(framebuf.FrameBuffer):
 
 
 class SSD1306_I2C(SSD1306):
-    def __init__(self, width, height, i2c, addr=SSD1306_ADDRESS, external_vcc=False, graphics=True):
+    def __init__(self, width, height, i2c, addr=SSD1306_ADDRESS, external_vcc=False):
         self.i2c = i2c
         self.addr = addr
         self.temp = bytearray(2)
-        self.graphics = self.init_graphics()
         self.write_list = [b"\x40", None]  # Co=0, D/C#=1
-        self._enable_graphics = False
         super().__init__(width, height, external_vcc)
-
-    def write_cmd(self, cmd):
-        self.temp[0] = 0x80  # Co=1, D/C#=0
-        self.temp[1] = cmd
-        self.i2c.writeto(self.addr, self.temp)
-
-    def write_data(self, buf):
-        self.write_list[1] = buf
-        self.i2c.writevto(self.addr, self.write_list)
-
-    def init_graphics(self):
-        if self._enable_graphics:
-            return Graphics(width=self.width, height=self.height, display=self.i2c)
-        else:
-            return None
-
-
-class SSD1306_SPI(SSD1306):
-    def __init__(self, width, height, spi, dc, res, cs, external_vcc=False):
-        self.rate = 10 * 1024 * 1024
-        dc.init(dc.OUT, value=0)
-        res.init(res.OUT, value=0)
-        cs.init(cs.OUT, value=1)
-        self.spi = spi
-        self.dc = dc
-        self.res = res
-        self.cs = cs
-        import time
-
-        self.res(1)
-        time.sleep_ms(1)
-        self.res(0)
-        time.sleep_ms(10)
-        self.res(1)
-        super().__init__(width, height, external_vcc)
-
-    def write_cmd(self, cmd):
-        self.spi.init(baudrate=self.rate, polarity=0, phase=0)
-        self.cs(1)
-        self.dc(0)
-        self.cs(0)
-        self.spi.write(bytearray([cmd]))
-        self.cs(1)
-
-    def write_data(self, buf):
-        self.spi.init(baudrate=self.rate, polarity=0, phase=0)
-        self.cs(1)
-        self.dc(1)
-        self.cs(0)
-        self.spi.write(buf)
-        self.cs(1)
-
-
-class FontWriter:
-    """
-    Creates an "Writer" object with the desired font. Different fonts can be used with different
-    instances of the FontWriter
-    """
-    def __init__(self, buffer, font):
-        self.buffer = buffer
-        self.font = font._FONT
-
-    def text(self, string, x=0, y=0, color=0xffff, bgcolor=0, colors=None):
-        buffer = self.buffer
-        font = self.font
-
-        if colors is None:
-            colors = (color, color, bgcolor, bgcolor)
-
-        for c in string:
-
-            if not ord(c) in font.keys():
-                c = "?"
-
-            row = y
-            _w, * _font = font[ord(c)]
-            for byte in _font:
-                unsalted = byte
-                for col in range(x, x + _w):
-                    color = colors[unsalted & 0x03]
-                    if color is not None:
-                        buffer.pixel(col, row, color)
-                    unsalted >>= 2
-                row += 1
-            x += _w
-
-    def char(self, c, x=0, y=0, color=0xffff, bgcolor=0, colors=None):
-        buffer = self.buffer
-        font = self.font
-
-        if colors is None:
-            colors = (color, color, bgcolor, bgcolor)
-
-        # for c in string:
-        if not c in font.keys():
-            return 0
-
-        row = y
-        _w, * _font = font[c]
-        for byte in _font:
-            unsalted = byte
-            for col in range(x, x + _w):
-                color = colors[unsalted & 0x03]
-                if color is not None:
-                    buffer.pixel(col, row, color)
-                unsalted >>= 2
-            row += 1
-        x += _w
-
-
-class Graphics:
-    def __init__(self, width, height, display):
-        """
-        Creates an instance of the Graphics library. This is a port based of the
-        Adafruit GFX Arduino library.
-
-        :param width: Width of the drawing area in pixels.
-        :param height: Height of the drawing area in pixels.
-        :param display: Instance of a display or buffer (e.g. machine.I2C).
-        """
-        self.width = width
-        self.height = height
-        self.display = display
-        self._pixel = display.pixel
 
     def draw_bytes(self, image: bytearray):
-        """
-        Draw an image (in a byte array/buffer) on the display.
+        """Draw data from a buffer.
 
-        :param image: Image to display in bytes (i.e. bytearray()).
+        Draw the data in the buffer on the display.
+
+        :param image: Image to display in a buffer (i.e. bytearray()).
         """
-        # TODO time draw_bytes and then use dsp_ref = self.display() and see if faster
         fb = framebuf.FrameBuffer(image, self.width, self.height, framebuf.MVLSB)
-        self.display.fill(0)
-        self.display.blit(fb, 8, 0)
-
-    def hline(self, x0, y0, width, *args, **kwargs):
-        # Slow implementation of a horizontal line using pixel drawing.
-        # This is used as the default horizontal line if no faster override
-        # is provided.
-        if y0 < 0 or y0 > self.height or x0 < -width or x0 > self.width:
-            return
-        for i in range(width):
-            self._pixel(x0 + i, y0, *args, **kwargs)
-
-    def vline(self, x0, y0, height, *args, **kwargs):
-        # Slow implementation of a vertical line using pixel drawing.
-        # This is used as the default vertical line if no faster override
-        # is provided.
-        if y0 < -height or y0 > self.height or x0 < 0 or x0 > self.width:
-            return
-        for i in range(height):
-            self._pixel(x0, y0 + i, *args, **kwargs)
-
-    def rect(self, x0, y0, width, height, *args, **kwargs):
-        # Rectangle drawing function.  Will draw a single pixel wide rectangle
-        # starting in the upper left x0, y0 position and width, height pixels in
-        # size.
-        if y0 < -height or y0 > self.height or x0 < -width or x0 > self.width:
-            return
-        self.hline(x0, y0, width, *args, **kwargs)
-        self.hline(x0, y0 + height - 1, width, *args, **kwargs)
-        self.vline(x0, y0, height, *args, **kwargs)
-        self.vline(x0 + width - 1, y0, height, *args, **kwargs)
-
-    def fill_rect(self, x0, y0, width, height, *args, **kwargs):
-        # Filled rectangle drawing function.  Will draw a single pixel wide
-        # rectangle starting in the upper left x0, y0 position and width, height
-        # pixels in size.
-        if y0 < -height or y0 > self.height or x0 < -width or x0 > self.width:
-            return
-        for i in range(x0, x0 + width):
-            self.vline(i, y0, height, *args, **kwargs)
-
-    def line(self, x0, y0, x1, y1, *args, **kwargs):
-        # Line drawing function.  Will draw a single pixel wide line starting at
-        # x0, y0 and ending at x1, y1.
-        steep = abs(y1 - y0) > abs(x1 - x0)
-        if steep:
-            x0, y0 = y0, x0
-            x1, y1 = y1, x1
-        if x0 > x1:
-            x0, x1 = x1, x0
-            y0, y1 = y1, y0
-        dx = x1 - x0
-        dy = abs(y1 - y0)
-        err = dx // 2
-        ystep = 0
-        if y0 < y1:
-            ystep = 1
-        else:
-            ystep = -1
-        while x0 <= x1:
-            if steep:
-                self._pixel(y0, x0, *args, **kwargs)
-            else:
-                self._pixel(x0, y0, *args, **kwargs)
-            err -= dy
-            if err < 0:
-                y0 += ystep
-                err += dx
-            x0 += 1
+        self.fill(0)
+        self.blit(fb, 0, 0)
 
     def circle(self, x0, y0, radius, *args, **kwargs):
         # Circle drawing function.  Will draw a single pixel wide circle with
@@ -369,6 +175,7 @@ class Graphics:
             self.vline(x0 + y, y0 - x, 2 * x + 1, *args, **kwargs)
             self.vline(x0 - x, y0 - y, 2 * y + 1, *args, **kwargs)
             self.vline(x0 - y, y0 - x, 2 * x + 1, *args, **kwargs)
+
 
     def triangle(self, x0, y0, x1, y1, x2, y2, *args, **kwargs):
         # Triangle drawing function.  Will draw a single pixel wide triangle
@@ -443,3 +250,105 @@ class Graphics:
                 a, b = b, a
             self.hline(a, y, b - a + 1, *args, **kwargs)
             y += 1
+
+    def write_cmd(self, cmd):
+        self.temp[0] = 0x80  # Co=1, D/C#=0
+        self.temp[1] = cmd
+        self.i2c.writeto(self.addr, self.temp)
+
+    def write_data(self, buf):
+        self.write_list[1] = buf
+        self.i2c.writevto(self.addr, self.write_list)
+
+
+class SSD1306_SPI(SSD1306):
+    def __init__(self, width, height, spi, dc, res, cs, external_vcc=False):
+        self.rate = 10 * 1024 * 1024
+        dc.init(dc.OUT, value=0)
+        res.init(res.OUT, value=0)
+        cs.init(cs.OUT, value=1)
+        self.spi = spi
+        self.dc = dc
+        self.res = res
+        self.cs = cs
+        import time
+
+        self.res(1)
+        time.sleep_ms(1)
+        self.res(0)
+        time.sleep_ms(10)
+        self.res(1)
+        super().__init__(width, height, external_vcc)
+
+    def write_cmd(self, cmd):
+        self.spi.init(baudrate=self.rate, polarity=0, phase=0)
+        self.cs(1)
+        self.dc(0)
+        self.cs(0)
+        self.spi.write(bytearray([cmd]))
+        self.cs(1)
+
+    def write_data(self, buf):
+        self.spi.init(baudrate=self.rate, polarity=0, phase=0)
+        self.cs(1)
+        self.dc(1)
+        self.cs(0)
+        self.spi.write(buf)
+        self.cs(1)
+
+# TODO: Initialize font writer w/ display on startup?
+class FontWriter:
+    """
+    Creates an "Writer" object with the desired font. Different fonts can be used with different
+    instances of the FontWriter
+    """
+    def __init__(self, buffer, font):
+        self.buffer = buffer
+        self.font = font._FONT
+
+    def text(self, string, x=0, y=0, color=0xffff, bgcolor=0, colors=None):
+        buffer = self.buffer
+        font = self.font
+
+        if colors is None:
+            colors = (color, color, bgcolor, bgcolor)
+
+        for c in string:
+
+            if not ord(c) in font.keys():
+                c = "?"
+
+            row = y
+            _w, * _font = font[ord(c)]
+            for byte in _font:
+                unsalted = byte
+                for col in range(x, x + _w):
+                    color = colors[unsalted & 0x03]
+                    if color is not None:
+                        buffer.pixel(col, row, color)
+                    unsalted >>= 2
+                row += 1
+            x += _w
+
+    def char(self, c, x=0, y=0, color=0xffff, bgcolor=0, colors=None):
+        buffer = self.buffer
+        font = self.font
+
+        if colors is None:
+            colors = (color, color, bgcolor, bgcolor)
+
+        # for c in string:
+        if not c in font.keys():
+            return 0
+
+        row = y
+        _w, * _font = font[c]
+        for byte in _font:
+            unsalted = byte
+            for col in range(x, x + _w):
+                color = colors[unsalted & 0x03]
+                if color is not None:
+                    buffer.pixel(col, row, color)
+                unsalted >>= 2
+            row += 1
+        x += _w
