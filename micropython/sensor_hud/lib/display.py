@@ -114,29 +114,30 @@ class SSD1306_I2C(SSD1306):
         self.write_list = [b"\x40", None]  # Co=0, D/C#=1
         super().__init__(width, height, external_vcc)
 
-    def draw_bytes(self, image: bytearray):
+    def draw_bytes(self, buffer: bytearray):
         """Draw data from a buffer.
 
         Draw the data in the buffer on the display.
 
-        :param image: Image to display in a buffer (i.e. bytearray()).
+        :param buffer: Image to display in a buffer (i.e. bytearray()).
         """
-        fb = framebuf.FrameBuffer(image, self.width, self.height, framebuf.MVLSB)
+        fb = framebuf.FrameBuffer(buffer, self.width, self.height, framebuf.MVLSB)
         self.fill(0)
         self.blit(fb, 0, 0)
 
     def circle(self, x0, y0, radius, *args, **kwargs):
         # Circle drawing function.  Will draw a single pixel wide circle with
         # center at x0, y0 and the specified radius.
+        pixel = self.pixel
         f = 1 - radius
         ddF_x = 1
         ddF_y = -2 * radius
         x = 0
         y = radius
-        self._pixel(x0, y0 + radius, *args, **kwargs)
-        self._pixel(x0, y0 - radius, *args, **kwargs)
-        self._pixel(x0 + radius, y0, *args, **kwargs)
-        self._pixel(x0 - radius, y0, *args, **kwargs)
+        pixel(x0, y0 + radius, *args, **kwargs)
+        pixel(x0, y0 - radius, *args, **kwargs)
+        pixel(x0 + radius, y0, *args, **kwargs)
+        pixel(x0 - radius, y0, *args, **kwargs)
         while x < y:
             if f >= 0:
                 y -= 1
@@ -145,19 +146,20 @@ class SSD1306_I2C(SSD1306):
             x += 1
             ddF_x += 2
             f += ddF_x
-            self._pixel(x0 + x, y0 + y, *args, **kwargs)
-            self._pixel(x0 - x, y0 + y, *args, **kwargs)
-            self._pixel(x0 + x, y0 - y, *args, **kwargs)
-            self._pixel(x0 - x, y0 - y, *args, **kwargs)
-            self._pixel(x0 + y, y0 + x, *args, **kwargs)
-            self._pixel(x0 - y, y0 + x, *args, **kwargs)
-            self._pixel(x0 + y, y0 - x, *args, **kwargs)
-            self._pixel(x0 - y, y0 - x, *args, **kwargs)
+            pixel(x0 + x, y0 + y, *args, **kwargs)
+            pixel(x0 - x, y0 + y, *args, **kwargs)
+            pixel(x0 + x, y0 - y, *args, **kwargs)
+            pixel(x0 - x, y0 - y, *args, **kwargs)
+            pixel(x0 + y, y0 + x, *args, **kwargs)
+            pixel(x0 - y, y0 + x, *args, **kwargs)
+            pixel(x0 + y, y0 - x, *args, **kwargs)
+            pixel(x0 - y, y0 - x, *args, **kwargs)
 
     def fill_circle(self, x0, y0, radius, *args, **kwargs):
         # Filled circle drawing function.  Will draw a filled circule with
         # center at x0, y0 and the specified radius.
-        self.vline(x0, y0 - radius, 2 * radius + 1, *args, **kwargs)
+        vline = self.vline
+        vline(x0, y0 - radius, 2 * radius + 1, *args, **kwargs)
         f = 1 - radius
         ddF_x = 1
         ddF_y = -2 * radius
@@ -171,22 +173,24 @@ class SSD1306_I2C(SSD1306):
             x += 1
             ddF_x += 2
             f += ddF_x
-            self.vline(x0 + x, y0 - y, 2 * y + 1, *args, **kwargs)
-            self.vline(x0 + y, y0 - x, 2 * x + 1, *args, **kwargs)
-            self.vline(x0 - x, y0 - y, 2 * y + 1, *args, **kwargs)
-            self.vline(x0 - y, y0 - x, 2 * x + 1, *args, **kwargs)
+            vline(x0 + x, y0 - y, 2 * y + 1, *args, **kwargs)
+            vline(x0 + y, y0 - x, 2 * x + 1, *args, **kwargs)
+            vline(x0 - x, y0 - y, 2 * y + 1, *args, **kwargs)
+            vline(x0 - y, y0 - x, 2 * x + 1, *args, **kwargs)
 
 
     def triangle(self, x0, y0, x1, y1, x2, y2, *args, **kwargs):
         # Triangle drawing function.  Will draw a single pixel wide triangle
         # around the points (x0, y0), (x1, y1), and (x2, y2).
-        self.line(x0, y0, x1, y1, *args, **kwargs)
-        self.line(x1, y1, x2, y2, *args, **kwargs)
-        self.line(x2, y2, x0, y0, *args, **kwargs)
+        line = self.line
+        line(x0, y0, x1, y1, *args, **kwargs)
+        line(x1, y1, x2, y2, *args, **kwargs)
+        line(x2, y2, x0, y0, *args, **kwargs)
 
     def fill_triangle(self, x0, y0, x1, y1, x2, y2, *args, **kwargs):
         # Filled triangle drawing function.  Will draw a filled triangle around
         # the points (x0, y0), (x1, y1), and (x2, y2).
+        hline = self.hline
         if y0 > y1:
             y0, y1 = y1, y0
             x0, x1 = x1, x0
@@ -211,7 +215,7 @@ class SSD1306_I2C(SSD1306):
                 a = x2
             elif x2 > b:
                 b = x2
-            self.hline(a, y0, b - a + 1, *args, **kwargs)
+            hline(a, y0, b - a + 1, *args, **kwargs)
             return
         dx01 = x1 - x0
         dy01 = y1 - y0
@@ -238,7 +242,7 @@ class SSD1306_I2C(SSD1306):
             sb += dx02
             if a > b:
                 a, b = b, a
-            self.hline(a, y, b - a + 1, *args, **kwargs)
+            hline(a, y, b - a + 1, *args, **kwargs)
         sa = dx12 * (y - y1)
         sb = dx02 * (y - y0)
         while y <= y2:
@@ -248,7 +252,7 @@ class SSD1306_I2C(SSD1306):
             sb += dx02
             if a > b:
                 a, b = b, a
-            self.hline(a, y, b - a + 1, *args, **kwargs)
+            hline(a, y, b - a + 1, *args, **kwargs)
             y += 1
 
     def write_cmd(self, cmd):
