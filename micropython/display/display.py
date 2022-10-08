@@ -90,6 +90,7 @@ class SSD1306(framebuf.FrameBuffer):
         self.write_cmd(SET_SEG_REMAP | (rotate & 1))
 
     def show(self):
+        write_cmd = self.write_cmd
         x0 = 0
         x1 = self.width - 1
         if self.width != 128:
@@ -97,37 +98,22 @@ class SSD1306(framebuf.FrameBuffer):
             col_offset = (128 - self.width) // 2
             x0 += col_offset
             x1 += col_offset
-        self.write_cmd(SET_COL_ADDR)
-        self.write_cmd(x0)
-        self.write_cmd(x1)
-        self.write_cmd(SET_PAGE_ADDR)
-        self.write_cmd(0)
-        self.write_cmd(self.pages - 1)
+        write_cmd(SET_COL_ADDR)
+        write_cmd(x0)
+        write_cmd(x1)
+        write_cmd(SET_PAGE_ADDR)
+        write_cmd(0)
+        write_cmd(self.pages - 1)
         self.write_data(self.buffer)
-
-
-class SSD1306_I2C(SSD1306):
-    def __init__(self, width, height, i2c, addr=SSD1306_ADDRESS, external_vcc=False):
-        self.i2c = i2c
-        self.addr = addr
-        self.temp = bytearray(2)
-        self.write_list = [b"\x40", None]  # Co=0, D/C#=1
-        super().__init__(width, height, external_vcc)
-
-    def clear(self):
-        self.fill(0)
-        self.show()
 
     def draw_bytes(self, buffer: bytearray):
         """Draw data from a buffer.
 
         Draw the data in the buffer on the display.
-
-        :param buffer: Image to display in a buffer (i.e. bytearray()).
         """
-        fb = framebuf.FrameBuffer(buffer, self.width, self.height, framebuf.MVLSB)
+        fb = framebuf.FrameBuffer(buffer, self.width, self.height, framebuf.MONO_HLSB)
         self.fill(0)
-        self.blit(fb, 8, 0)
+        self.blit(fb, 0, 0)
 
     def circle(self, x0, y0, radius, *args, **kwargs):
         # Circle drawing function.  Will draw a single pixel wide circle with
@@ -181,7 +167,6 @@ class SSD1306_I2C(SSD1306):
             vline(x0 + y, y0 - x, 2 * x + 1, *args, **kwargs)
             vline(x0 - x, y0 - y, 2 * y + 1, *args, **kwargs)
             vline(x0 - y, y0 - x, 2 * x + 1, *args, **kwargs)
-
 
     def triangle(self, x0, y0, x1, y1, x2, y2, c):
         # Triangle drawing function.  Will draw a single pixel wide triangle
@@ -258,6 +243,15 @@ class SSD1306_I2C(SSD1306):
                 a, b = b, a
             hline(a, y, b - a + 1, *args, **kwargs)
             y += 1
+
+
+class SSD1306_I2C(SSD1306):
+    def __init__(self, width, height, i2c, addr=SSD1306_ADDRESS, external_vcc=False):
+        self.i2c = i2c
+        self.addr = addr
+        self.temp = bytearray(2)
+        self.write_list = [b"\x40", None]  # Co=0, D/C#=1
+        super().__init__(width, height, external_vcc)
 
     def write_cmd(self, cmd):
         self.temp[0] = 0x80  # Co=1, D/C#=0
