@@ -114,6 +114,10 @@ class SSD1306_I2C(SSD1306):
         self.write_list = [b"\x40", None]  # Co=0, D/C#=1
         super().__init__(width, height, external_vcc)
 
+    def clear(self):
+        self.fill(0)
+        self.show()
+
     def draw_bytes(self, buffer: bytearray):
         """Draw data from a buffer.
 
@@ -123,7 +127,7 @@ class SSD1306_I2C(SSD1306):
         """
         fb = framebuf.FrameBuffer(buffer, self.width, self.height, framebuf.MVLSB)
         self.fill(0)
-        self.blit(fb, 0, 0)
+        self.blit(fb, 8, 0)
 
     def circle(self, x0, y0, radius, *args, **kwargs):
         # Circle drawing function.  Will draw a single pixel wide circle with
@@ -179,13 +183,13 @@ class SSD1306_I2C(SSD1306):
             vline(x0 - y, y0 - x, 2 * x + 1, *args, **kwargs)
 
 
-    def triangle(self, x0, y0, x1, y1, x2, y2, *args, **kwargs):
+    def triangle(self, x0, y0, x1, y1, x2, y2, c):
         # Triangle drawing function.  Will draw a single pixel wide triangle
         # around the points (x0, y0), (x1, y1), and (x2, y2).
         line = self.line
-        line(x0, y0, x1, y1, *args, **kwargs)
-        line(x1, y1, x2, y2, *args, **kwargs)
-        line(x2, y2, x0, y0, *args, **kwargs)
+        line(x0, y0, x1, y1, c)
+        line(x1, y1, x2, y2, c)
+        line(x2, y2, x0, y0, c)
 
     def fill_triangle(self, x0, y0, x1, y1, x2, y2, *args, **kwargs):
         # Filled triangle drawing function.  Will draw a filled triangle around
