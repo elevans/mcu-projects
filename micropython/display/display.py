@@ -205,14 +205,6 @@ class SSD1306(framebuf.FrameBuffer):
             vline(x0 - x, y0 - y, 2 * y + 1, *args, **kwargs)
             vline(x0 - y, y0 - x, 2 * x + 1, *args, **kwargs)
 
-    def triangle(self, x0, y0, x1, y1, x2, y2, c):
-        # Triangle drawing function.  Will draw a single pixel wide triangle
-        # around the points (x0, y0), (x1, y1), and (x2, y2).
-        line = self.line
-        line(x0, y0, x1, y1, c)
-        line(x1, y1, x2, y2, c)
-        line(x2, y2, x0, y0, c)
-
     def fill_triangle(self, x0, y0, x1, y1, x2, y2, *args, **kwargs):
         # Filled triangle drawing function.  Will draw a filled triangle around
         # the points (x0, y0), (x1, y1), and (x2, y2).
@@ -280,6 +272,14 @@ class SSD1306(framebuf.FrameBuffer):
                 a, b = b, a
             hline(a, y, b - a + 1, *args, **kwargs)
             y += 1
+
+    def triangle(self, x0, y0, x1, y1, x2, y2, c):
+        # Triangle drawing function.  Will draw a single pixel wide triangle
+        # around the points (x0, y0), (x1, y1), and (x2, y2).
+        line = self.line
+        line(x0, y0, x1, y1, c)
+        line(x1, y1, x2, y2, c)
+        line(x2, y2, x0, y0, c)
 
 
 class SSD1306_I2C(SSD1306):
