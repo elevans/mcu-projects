@@ -42,7 +42,7 @@ class Multiplexer:
         self.active_channels = [] # list of active channels - for valid channel options
         self.inactive_channels = [] # list of inactive channels - for skpping
         self.current_channel = 0 # current channel selected on multiplexer
-        self.connected_device = {} # dict that stores device instances, keys are channel
+        self.connected_devices = {} # dict that stores device instances, keys are channel
         self.multiplexer = None # access to the multiplexer itself
         self.connected_device_id = {} # dict that stores device id, keys are channel
         self._initialized = False # multiplexer init complete?
@@ -59,7 +59,7 @@ class Multiplexer:
         self.current_channel = channel
 
         if self._initialized:
-            self.device = self.connected_device[self.current_channel]
+            self.device = self.connected_devices[self.current_channel]
 
     def next_device(self):
         """
@@ -121,9 +121,9 @@ class Multiplexer:
         if address == SSD1306_ADDRESS:
             device = display.SSD1306_I2C(DISPLAY_WIDTH, DISPLAY_HEIGHT, self.multiplexer)
             device.fill(0)
-            self.connected_device[self.current_channel] = device
+            self.connected_devices[self.current_channel] = device
         
         # initialize sensors (hdc1080)
         if address == HDC1080_ADDRESS:
             device = sensors.HDC1080(self.multiplexer)
-            self.connected_device[self.current_channel] = device
+            self.connected_devices[self.current_channel] = device
