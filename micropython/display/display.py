@@ -31,6 +31,7 @@ class SSD1306(framebuf.FrameBuffer):
         self.pages = self.height // 8
         self.buffer = bytearray(self.pages * self.width)
         super().__init__(self.buffer, self.width, self.height, framebuf.MONO_VLSB)
+        self.temp_bar_max = [0, 0] # for dual bar graph max values
         self.init_display()
 
     def init_display(self):
@@ -144,6 +145,42 @@ class SSD1306(framebuf.FrameBuffer):
             pixel(x0 - y, y0 + x, *args, **kwargs)
             pixel(x0 + y, y0 - x, *args, **kwargs)
             pixel(x0 - y, y0 - x, *args, **kwargs)
+
+    def h_dual_bar_graph_frame(self, x, y, s1, s2):
+        # draw frame and labels
+        line = self.line
+        line(x + 10, y + 0, x + 10, y + 32, 1)
+        line(x + 10, y + 16, self.width, y + 16, 1)
+        self.text(s1, 0, 4)
+        self.text(s2, 0, 24)
+
+        # draw major and minor divisions on x axis
+        div_major_pos = x + 10
+        while div_major_pos <= (self.width - 10):
+            line(div_major_pos, y + 12, div_major_pos, y + 20, 1)
+            div_major_pos += 12 # 128 / 10 = ~12 divisions
+
+        div_minor_pos = x + 10
+        while div_minor_pos <= (self.width -10):
+            line(div_minor_pos, y + 14, div_minor_pos, y + 18, 1)
+            div_minor_pos += 6 # 128 / 20 = ~6 divisions
+
+    def h_dual_bar_graph_data(self, v1, v2, rect, vline, x=0, y=0):
+        # TODO: test if self.rect and self.vline vs rect and vline is same speed
+        # clear bars
+        rect(11, 4, self.width, 5, 0, True)
+        rect(11, 24, self.width, 5, 0, True)
+        # draw bars
+        rect(11, 4, v1, 5, 1, True)
+        rect(11, 24, v2, 5, 1, True)
+
+        # draw/update max memory line
+        if v1 > self.temp_bar_max[0]:
+            self.temp_bar_max[0] = v1
+        if v2 > self.temp_bar_max[1]:
+            self.temp_bar_max[1] = v2
+        vline(x + self.temp_bar_max[0] + 10, y + 4, 5, 1)
+        vline(x + self.temp_bar_max[1] + 10, y + 24, 5, 1)
 
     def fill_circle(self, x0, y0, radius, *args, **kwargs):
         # Filled circle drawing function.  Will draw a filled circule with
