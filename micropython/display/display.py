@@ -108,9 +108,9 @@ class SSD1306(framebuf.FrameBuffer):
         self.write_data(self.buffer)
 
     def draw_bytes(self, buffer: bytearray):
-        """Draw data from a buffer.
+        """Draw an image from a bytearray/buffer.
 
-        Draw the data in the buffer on the display.
+        Draw a bytearray on the display using a FrameBuffer and blit.
         """
         fb = framebuf.FrameBuffer(buffer, self.width, self.height, framebuf.MONO_HLSB)
         self.fill(0)
