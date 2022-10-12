@@ -91,6 +91,7 @@ class SSD1306(framebuf.FrameBuffer):
         self.write_cmd(SET_SEG_REMAP | (rotate & 1))
 
     def show(self):
+        # fetch methods
         write_cmd = self.write_cmd
         x0 = 0
         x1 = self.width - 1
@@ -111,6 +112,8 @@ class SSD1306(framebuf.FrameBuffer):
         """Draw an image from a bytearray/buffer.
 
         Draw a bytearray on the display using a FrameBuffer and blit.
+
+        :param buffer: Image data in a bytearray.
         """
         fb = framebuf.FrameBuffer(buffer, self.width, self.height, framebuf.MONO_HLSB)
         self.fill(0)
@@ -146,6 +149,17 @@ class SSD1306(framebuf.FrameBuffer):
             pixel(x0 + y, y0 - x, *args, **kwargs)
             pixel(x0 - y, y0 - x, *args, **kwargs)
 
+    def h_dual_bar_graph_frame(self, s1, s2, x=0, y=0):
+        """Draw horizontal bar graph frame.
+
+        Draw a horizontal dual bar graph frame. Call this method
+        outside of the main While loop to avoid unecessary redraws.
+
+        :param s1: String for bar graph 1 (top).
+        :param s2: String for bar graph 2 (bottom).
+        :param x: X-axis coordinate to begin drawing the bar graph frame (default=0).
+        :param y: Y-axis coordinate to begin drawing the bar graph frame (default=0).
+        """
         # fetch methods
         line = self.line
         text = self.text
@@ -167,8 +181,19 @@ class SSD1306(framebuf.FrameBuffer):
             line(div_minor_pos, y + 14, div_minor_pos, y + 18, 1)
             div_minor_pos += 6 # 128 / 20 = ~6 divisions
 
-    def h_dual_bar_graph_data(self, v1, v2, rect, vline, x=0, y=0):
-        # TODO: test if self.rect and self.vline vs rect and vline is same speed
+    def h_dual_bar_graph_data(self, v1: int, v2: int, rect, vline, x=0, y=0):
+        """Draw horizontal bar graph data.
+
+        Draw the horizontal dual bar graph data. The last maximum value for each bar
+        graph renders as a memory line.
+
+        :param v1: Value of bar graph 1 (top).
+        :param v2: Value of bar graph 2 (bottom).
+        :param rect: The display's instance of rect (avoids look ups in While loops).
+        :param vline: The display's instance of vline (avoids look ups in while loops).
+        :param x: X-axis coordinate to begin drawing bar graph data (default=0).
+        :param y: Y-axis coordinate to begin drawing bar graph data (default=0).
+        """
         # clear bars
         rect(11, 4, self.width, 5, 0, True)
         rect(11, 24, self.width, 5, 0, True)
