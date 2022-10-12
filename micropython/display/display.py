@@ -146,13 +146,15 @@ class SSD1306(framebuf.FrameBuffer):
             pixel(x0 + y, y0 - x, *args, **kwargs)
             pixel(x0 - y, y0 - x, *args, **kwargs)
 
-    def h_dual_bar_graph_frame(self, x, y, s1, s2):
-        # draw frame and labels
+        # fetch methods
         line = self.line
+        text = self.text
+
+        # draw frame and labels
         line(x + 10, y + 0, x + 10, y + 32, 1)
         line(x + 10, y + 16, self.width, y + 16, 1)
-        self.text(s1, 0, 4)
-        self.text(s2, 0, 24)
+        text(s1, 0, 4)
+        text(s2, 0, 24)
 
         # draw major and minor divisions on x axis
         div_major_pos = x + 10
