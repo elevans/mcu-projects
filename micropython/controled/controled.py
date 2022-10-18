@@ -1,4 +1,4 @@
-import display
+import displayed
 import sensors
 from machine import Pin, I2C
 from micropython import const
@@ -119,7 +119,7 @@ class Multiplexer:
         """
         # initialize display (ssd1306)
         if address == SSD1306_ADDRESS:
-            device = display.SSD1306_I2C(DISPLAY_WIDTH, DISPLAY_HEIGHT, self.multiplexer)
+            device = displayed.SSD1306_I2C(DISPLAY_WIDTH, DISPLAY_HEIGHT, self.multiplexer)
             device.fill(0)
             self.connected_devices[self.current_channel] = device
         
