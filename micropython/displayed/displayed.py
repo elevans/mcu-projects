@@ -1,4 +1,5 @@
 import framebuf
+import array as arr
 from micropython import const
 
 # constants
@@ -31,7 +32,7 @@ class SSD1306(framebuf.FrameBuffer):
         self.pages = self.height // 8
         self.buffer = bytearray(self.pages * self.width)
         super().__init__(self.buffer, self.width, self.height, framebuf.MONO_VLSB)
-        self.temp_bar_max = [0, 0] # for dual bar graph max values
+        self.temp_bar_max = arr.array('i', [0, 0])
         self.init_display()
 
     def init_display(self):
@@ -93,11 +94,13 @@ class SSD1306(framebuf.FrameBuffer):
     def show(self):
         # fetch methods
         write_cmd = self.write_cmd
+        width = self.width
+
         x0 = 0
-        x1 = self.width - 1
-        if self.width != 128:
+        x1 = width - 1
+        if width != 128:
             # narrow displays use centred columns
-            col_offset = (128 - self.width) // 2
+            col_offset = (128 - width) // 2
             x0 += col_offset
             x1 += col_offset
         write_cmd(SET_COL_ADDR)
@@ -118,36 +121,6 @@ class SSD1306(framebuf.FrameBuffer):
         fb = framebuf.FrameBuffer(buffer, self.width, self.height, framebuf.MONO_HLSB)
         self.fill(0)
         self.blit(fb, 0, 0)
-
-    def circle(self, x0, y0, radius, *args, **kwargs):
-        # Circle drawing function.  Will draw a single pixel wide circle with
-        # center at x0, y0 and the specified radius.
-        pixel = self.pixel
-        f = 1 - radius
-        ddF_x = 1
-        ddF_y = -2 * radius
-        x = 0
-        y = radius
-        pixel(x0, y0 + radius, *args, **kwargs)
-        pixel(x0, y0 - radius, *args, **kwargs)
-        pixel(x0 + radius, y0, *args, **kwargs)
-        pixel(x0 - radius, y0, *args, **kwargs)
-        while x < y:
-            if f >= 0:
-                y -= 1
-                ddF_y += 2
-                f += ddF_y
-            x += 1
-            ddF_x += 2
-            f += ddF_x
-            pixel(x0 + x, y0 + y, *args, **kwargs)
-            pixel(x0 - x, y0 + y, *args, **kwargs)
-            pixel(x0 + x, y0 - y, *args, **kwargs)
-            pixel(x0 - x, y0 - y, *args, **kwargs)
-            pixel(x0 + y, y0 + x, *args, **kwargs)
-            pixel(x0 - y, y0 + x, *args, **kwargs)
-            pixel(x0 + y, y0 - x, *args, **kwargs)
-            pixel(x0 - y, y0 - x, *args, **kwargs)
 
     def h_dual_bar_graph_frame(self, s1, s2, x=0, y=0):
         """Draw horizontal bar graph frame.
@@ -209,104 +182,45 @@ class SSD1306(framebuf.FrameBuffer):
         vline(x + self.temp_bar_max[0] + 10, y + 4, 5, 1)
         vline(x + self.temp_bar_max[1] + 10, y + 24, 5, 1)
 
-    def fill_circle(self, x0, y0, radius, *args, **kwargs):
-        # Filled circle drawing function.  Will draw a filled circule with
-        # center at x0, y0 and the specified radius.
-        vline = self.vline
-        vline(x0, y0 - radius, 2 * radius + 1, *args, **kwargs)
-        f = 1 - radius
-        ddF_x = 1
-        ddF_y = -2 * radius
-        x = 0
-        y = radius
-        while x < y:
-            if f >= 0:
-                y -= 1
-                ddF_y += 2
-                f += ddF_y
-            x += 1
-            ddF_x += 2
-            f += ddF_x
-            vline(x0 + x, y0 - y, 2 * y + 1, *args, **kwargs)
-            vline(x0 + y, y0 - x, 2 * x + 1, *args, **kwargs)
-            vline(x0 - x, y0 - y, 2 * y + 1, *args, **kwargs)
-            vline(x0 - y, y0 - x, 2 * x + 1, *args, **kwargs)
+    def fw_char(self, c, font, x=0, y=0):
+        pixel = self.pixel
+        colors = (0xffff, 0xffff, 0, 0)
 
-    def fill_triangle(self, x0, y0, x1, y1, x2, y2, *args, **kwargs):
-        # Filled triangle drawing function.  Will draw a filled triangle around
-        # the points (x0, y0), (x1, y1), and (x2, y2).
-        hline = self.hline
-        if y0 > y1:
-            y0, y1 = y1, y0
-            x0, x1 = x1, x0
-        if y1 > y2:
-            y2, y1 = y1, y2
-            x2, x1 = x1, x2
-        if y0 > y1:
-            y0, y1 = y1, y0
-            x0, x1 = x1, x0
-        a = 0
-        b = 0
-        y = 0
-        last = 0
-        if y0 == y2:
-            a = x0
-            b = x0
-            if x1 < a:
-                a = x1
-            elif x1 > b:
-                b = x1
-            if x2 < a:
-                a = x2
-            elif x2 > b:
-                b = x2
-            hline(a, y0, b - a + 1, *args, **kwargs)
-            return
-        dx01 = x1 - x0
-        dy01 = y1 - y0
-        dx02 = x2 - x0
-        dy02 = y2 - y0
-        dx12 = x2 - x1
-        dy12 = y2 - y1
-        if dy01 == 0:
-            dy01 = 1
-        if dy02 == 0:
-            dy02 = 1
-        if dy12 == 0:
-            dy12 = 1
-        sa = 0
-        sb = 0
-        if y1 == y2:
-            last = y1
-        else:
-            last = y1 - 1
-        for y in range(y0, last + 1):
-            a = x0 + sa // dy01
-            b = x0 + sb // dy02
-            sa += dx01
-            sb += dx02
-            if a > b:
-                a, b = b, a
-            hline(a, y, b - a + 1, *args, **kwargs)
-        sa = dx12 * (y - y1)
-        sb = dx02 * (y - y0)
-        while y <= y2:
-            a = x1 + sa // dy12
-            b = x0 + sb // dy02
-            sa += dx12
-            sb += dx02
-            if a > b:
-                a, b = b, a
-            hline(a, y, b - a + 1, *args, **kwargs)
-            y += 1
+        # for c in string:
+        if not c in font.keys():
+            return 0
 
-    def triangle(self, x0, y0, x1, y1, x2, y2, c):
-        # Triangle drawing function.  Will draw a single pixel wide triangle
-        # around the points (x0, y0), (x1, y1), and (x2, y2).
-        line = self.line
-        line(x0, y0, x1, y1, c)
-        line(x1, y1, x2, y2, c)
-        line(x2, y2, x0, y0, c)
+        row = y
+        _w, * _font = font[c]
+        r = range(x, x + _w)
+        for byte in _font:
+            unsalted = byte
+            for col in r:
+                color = colors[unsalted & 0x03]
+                pixel(col, row, color)
+                unsalted >>= 2
+            row += 1
+        x += _w
+
+    def fw_text(self, s, font, x=0, y=0):
+        p = self.pixel
+        colors = (0xffff, 0xffff, 0, 0)
+
+        for c in s:
+            if not ord(c) in font.keys():
+                c = "?"
+
+            row = y
+            _w, * _font = font[ord(c)]
+            r = range(x, x + _w)
+            for byte in _font:
+                unsalted = byte
+                for col in r:
+                    color = colors[unsalted & 0x03]
+                    p(col, row, color)
+                    unsalted >>= 2
+                row += 1
+            x += _w
 
 
 class SSD1306_I2C(SSD1306):
@@ -361,60 +275,3 @@ class SSD1306_SPI(SSD1306):
         self.cs(0)
         self.spi.write(buf)
         self.cs(1)
-
-# TODO: Initialize font writer w/ display on startup?
-class FontWriter:
-    """
-    Creates an "Writer" object with the desired font. Different fonts can be used with different
-    instances of the FontWriter
-    """
-    def __init__(self, buffer, font):
-        self.buffer = buffer
-        self.font = font._FONT
-
-    def text(self, string, x=0, y=0, color=0xffff, bgcolor=0, colors=None):
-        buffer = self.buffer
-        font = self.font
-
-        if colors is None:
-            colors = (color, color, bgcolor, bgcolor)
-
-        for c in string:
-
-            if not ord(c) in font.keys():
-                c = "?"
-
-            row = y
-            _w, * _font = font[ord(c)]
-            for byte in _font:
-                unsalted = byte
-                for col in range(x, x + _w):
-                    color = colors[unsalted & 0x03]
-                    if color is not None:
-                        buffer.pixel(col, row, color)
-                    unsalted >>= 2
-                row += 1
-            x += _w
-
-    def char(self, c, x=0, y=0, color=0xffff, bgcolor=0, colors=None):
-        buffer = self.buffer
-        font = self.font
-
-        if colors is None:
-            colors = (color, color, bgcolor, bgcolor)
-
-        # for c in string:
-        if not c in font.keys():
-            return 0
-
-        row = y
-        _w, * _font = font[c]
-        for byte in _font:
-            unsalted = byte
-            for col in range(x, x + _w):
-                color = colors[unsalted & 0x03]
-                if color is not None:
-                    buffer.pixel(col, row, color)
-                unsalted >>= 2
-            row += 1
-        x += _w
