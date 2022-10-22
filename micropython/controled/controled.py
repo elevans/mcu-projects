@@ -23,7 +23,7 @@ DISPLAY_WIDTH = const(128)
 DISPLAY_HEIGHT = const(32)
 
 class Multiplexer:
-    def __init__(self, i2c_id: int, scl_pin: Pin, sda_pin: Pin, freq: int=FREQUENCY_FAST):
+    def __init__(self, i2c):
         """Multiplexer helper methods.
 
         Adds helpful multiplexer control methods (e.g. next_device()) and
@@ -34,18 +34,13 @@ class Multiplexer:
         :param sda_pin: SDA Pin.
         :param freq: I2C device frequency (100 kHz or 400 kHz).
         """
-        self.i2c_id = i2c_id
-        self.scl_pin = scl_pin
-        self.sda_pin = sda_pin
-        self.freq = freq
         self.device = None # access the channel's device instance
         self.active_channels = [] # list of active channels - for valid channel options
         self.inactive_channels = [] # list of inactive channels - for skpping
         self.current_channel = 0 # current channel selected on multiplexer
         self.connected_devices = {} # dict that stores device instances, keys are channel
-        self.multiplexer = None # access to the multiplexer itself
+        self.multiplexer = i2c # access to the multiplexer itself
         self.connected_device_id = {} # dict that stores device id, keys are channel
-        self._initialized = False # multiplexer init complete?
         self._init_multiplexer()
 
     def select_channel(self, channel: int):
@@ -89,7 +84,6 @@ class Multiplexer:
         """
         Initialize the I2C multiplexer.
         """
-        self.multiplexer = I2C(self.i2c_id, scl=self.scl_pin, sda=self.sda_pin, freq=self.freq)
         self._init_connected_devices()
         self._initialized = True
         self.select_channel(self.active_channels[0])
