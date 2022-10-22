@@ -52,9 +52,7 @@ class Multiplexer:
             self.multiplexer.writeto(MULTIPLEXER_ADDRESS, bytearray([value]))
         
         self.current_channel = channel
-
-        if self._initialized:
-            self.device = self.connected_devices[self.current_channel]
+        self.device = self.connected_devices[self.current_channel]
 
     def next_device(self):
         """
@@ -97,27 +95,28 @@ class Multiplexer:
         """
         r = range(8)
         for i in r:
-            self.select_channel(i)
+            ch = 1 << i
+            self.multiplexer.writeto(MULTIPLEXER_ADDRESS, bytearray([ch]))
             scan_result = self.multiplexer.scan() # [60, 112]
             for address in DEVICE_LIBRARY:
                 if address in scan_result:
-                    self._init_device(address)
-                    self.active_channels.append(self.current_channel)
-                    self.connected_device_id[self.current_channel] = DEVICE_LIBRARY[address]
+                    self._init_device(address, i)
+                    self.active_channels.append(i)
+                    self.connected_device_id[i] = DEVICE_LIBRARY[address]
             if len(scan_result) == 1 and MULTIPLEXER_ADDRESS in scan_result:
-                self.inactive_channels.append(self.current_channel)
+                self.inactive_channels.append(i)
 
-    def _init_device(self, address):
+    def _init_device(self, addr, ch):
         """
         Setup routines for individual devices.
         """
         # initialize display (ssd1306)
-        if address == SSD1306_ADDRESS:
+        if addr == SSD1306_ADDRESS:
             device = displayed.SSD1306_I2C(DISPLAY_WIDTH, DISPLAY_HEIGHT, self.multiplexer)
             device.fill(0)
-            self.connected_devices[self.current_channel] = device
+            self.connected_devices[ch] = device
         
         # initialize sensors (hdc1080)
-        if address == HDC1080_ADDRESS:
+        if addr == HDC1080_ADDRESS:
             device = sensors.HDC1080(self.multiplexer)
-            self.connected_devices[self.current_channel] = device
+            self.connected_devices[ch] = device
