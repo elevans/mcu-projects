@@ -193,9 +193,12 @@ class SSD1306(framebuf.FrameBuffer):
         :param x: X-axis coordinate to begin drawing bar graph data (default=0).
         :param y: Y-axis coordinate to begin drawing bar graph data (default=0).
         """
+        # fetch vars
+        w = self.width - 1
+
         # clear bars
-        rect(11, 4, self.width, 5, 0, True)
-        rect(11, 24, self.width, 5, 0, True)
+        rect(11, 4, w, 5, 0, True)
+        rect(11, 24, w, 5, 0, True)
         # draw bars
         rect(11, 4, v1, 5, 1, True)
         rect(11, 24, v2, 5, 1, True)
