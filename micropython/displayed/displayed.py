@@ -122,6 +122,32 @@ class SSD1306(framebuf.FrameBuffer):
         self.fill(0)
         self.blit(fb, 0, 0)
 
+    def draw_select_frame(self, l=5):
+        """Draw a frame around the display.
+
+        Draw a frame around the display. This is intended to indicate a selected
+        display.
+
+        :param l: Length of the frame lines (defualt=5)
+        """
+        # fetch methods and vars
+        line = self.line
+        h = self.height - 1
+        w = self.width - 1
+
+        # top left corner
+        line(0,0,l,0,1)
+        line(0,0,0,l,1)
+        # top right corner
+        line(w, 0, w - l, 0, 1)
+        line(w, 0, w, l, 1)
+        # bottom right corner
+        line(w, h, w - l, h, 1)
+        line(w, h, w, h - l, 1)
+        # bottom left corner
+        line(0, h, l, h, 1)
+        line(0, h, 0, h - l, 1)
+
     def h_dual_bar_graph_frame(self, s1, s2, x=0, y=0):
         """Draw horizontal bar graph frame.
 
