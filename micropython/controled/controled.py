@@ -36,14 +36,14 @@ class Multiplexer:
         :param freq: I2C device frequency (100 kHz or 400 kHz).
         """
         self.device = None # access the channel's device instance
-        self.active_channels = bytearray(8) # list of active channels - for valid channel options
-        self.inactive_channels = bytearray(8) # list of inactive channels - for skpping
+        self.active_channels = bytearray() # array of active channels - for valid channel options
+        self.inactive_channels = bytearray() # array of inactive channels - for skpping
         self.channel = 0 # current channel selected on multiplexer
         self.device_map = {} # dict that stores device instances, keys are channel
         self.multiplexer = i2c # access to the multiplexer itself
         self.device_id = {} # dict that stores device id, keys are channel
         self._chs = bytearray(8)
-        self._buf = bytearray(1)
+        self._buf = bytearray(1) # pre-allocate a 1 byte temp buffer
         self._init_multiplexer()
 
     def select_channel(self, ch: int):
