@@ -48,7 +48,7 @@ class HDC1080:
         time.sleep(0.015)
         value = int.from_bytes(self.i2c.readfrom(HDC1080_ADDRESS, 2), "big")
         if unit == "c":
-            return (value / 2 ** 16) * 156 - 40
+            return (value / 2 ** 16) * 165 - 40
         elif unit == "f":
             return (value * 1.8 / (2 ** 16)) * 165 - 40
         else:
