@@ -6,6 +6,7 @@ HDC1080_ADDRESS = const(0x40)
 HDC1080_TEMP_REG = const(0x00)
 HDC1080_HUM_REG = const(0x01)
 HDC1080_CONFIG_REG = const(0x02)
+HDC1080_CONFIG = const(0x00)
 HDC1080_MANUFACTURER_ID = const(0xFE)
 HDC1080_DEVICE_ID = const(0xFF)
 HDC1080_SERIAL_ID_FIRST = const(0xFB)
@@ -22,14 +23,21 @@ class HDC1080:
         self.i2c = i2c
         self._t_reg_buf = bytes([HDC1080_TEMP_REG])
         self._h_reg_buf = bytes([HDC1080_HUM_REG])
-        self.init_device()
+        self._init_device()
         return
 
-    def init_device(self):
+    def _init_device(self):
         """
-        Initialize an HDC1080 device with 14-bit resolution.
+        Initialize an HDC1080 device. Default configuration:
+            | Acquisition mode: 0  (temp or hum)
+            | Temp resolution: 0 (14 bit)
+            | Hum resolution: 0 (14 bit)
         """
-        self.i2c.writeto_mem(HDC1080_ADDRESS, HDC1080_CONFIG_REG, bytes([1 << 4]))
+        self.i2c.writeto_mem(
+            HDC1080_ADDRESS,
+            HDC1080_CONFIG_REG,
+            bytes([HDC1080_CONFIG])
+            )
 
     def get_temp(self, unit="c"):
         """
