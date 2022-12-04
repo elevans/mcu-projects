@@ -50,8 +50,10 @@ class Multiplexer:
         """
         Select a channel (0 through 7).
         """
+        buf = self._buf
         if ch >= 0 and ch < 8:
-            self.multiplexer.writeto(MULTIPLEXER_ADDRESS, self._chs[ch])
+            buf[0] = self._chs[ch]
+            self.multiplexer.writeto(MULTIPLEXER_ADDRESS, buf)
         
         self.channel = ch
         self.device = self.device_map[self.channel]
