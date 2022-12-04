@@ -25,6 +25,8 @@ DISPLAY_HEIGHT = const(32)
 
 class Multiplexer:
     def __init__(self, i2c):
+        # TODO: Update docstrings
+        # TODO: Implement multi-channel
         """Multiplexer helper methods.
 
         Adds helpful multiplexer control methods (e.g. next_device()) and
@@ -57,6 +59,13 @@ class Multiplexer:
         
         self.channel = ch
         self.device = self.device_map[self.channel]
+
+    def select_multiple_channels(self, chs: bytearray):
+        """
+        Select multiple channels (0 through 7).
+        """
+        # XOR the bytes in the passed together!
+        return
 
     def next_device(self):
         """

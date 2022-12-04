@@ -2,6 +2,9 @@ import time
 from micropython import const
 
 # set constants
+BH1750FVI_POWER_OFF = const(0x00)
+BH1750FVI_POWER_ON = const(0x01)
+BH1750FVI_RESET = const(0x07)
 HDC1080_ADDRESS = const(0x40)
 HDC1080_TEMP_REG = const(0x00)
 HDC1080_HUM_REG = const(0x01)
@@ -12,6 +15,18 @@ HDC1080_DEVICE_ID = const(0xFF)
 HDC1080_SERIAL_ID_FIRST = const(0xFB)
 HDC1080_SERIAL_ID_MID = const(0xFC)
 HDC1080_SERIAL_ID_LAST = const(0xFD)
+GENERIC_STOP = const(0xFF)
+
+class BH1750FVI:
+    """
+    """
+    def __init__(self, i2c):
+        self.i2c = i2c
+        self._init_device()
+        return
+
+    def _init_device(self):
+        self.i2c.writeto_mem()
 
 class HDC1080:
     """
