@@ -148,8 +148,45 @@ class SSD1306(framebuf.FrameBuffer):
         line(0, h, l, h, 1)
         line(0, h, 0, h - l, 1)
 
+    def h_bar_graph_frame(self, x=0, y=0):
+        """Draw a horizontal bar graph frame.
+        """
+        # fetch methods and vars
+        line = self.line
+        w = self.width - 1
+
+        # draw frame and labels
+        line(x + 10, y + 24, w - 10, y + 24, 1)
+        line(x + 10, y + 18, x + 10, y + 30, 1)
+        line(w - 10, y + 18, w - 10, y + 30, 1)
+
+        # draw major and minor divisions on x axis
+        div_major_pos = x + 10
+        while div_major_pos <= (w - 10):
+            line(div_major_pos, y + 20, div_major_pos, y + 28, 1)
+            div_major_pos += round((w - 10)/10)
+
+        div_minor_pos = x + 10
+        while div_minor_pos <= (w - 10):
+            line(div_minor_pos, y + 22, div_minor_pos, y + 26, 1)
+            div_minor_pos += round((w - 10)/20)
+
+    def h_bar_graph_data(self, v: int, rect, x=0, y=0):
+        """Draw horizontal bar graph data.
+
+        :param v: Analog pin reads.
+        """
+        # fetch vars
+        w = self.width - 1
+
+        # clear bar
+        rect(x + 10, y + 11, w - 20, 5, 0, True)
+
+        # draw bar
+        rect(x + 10, y + 11, round(((w - 20) / 65536) * v), 5, 1, True)
+
     def h_dual_bar_graph_frame(self, s1, s2, x=0, y=0):
-        """Draw horizontal bar graph frame.
+        """Draw a horizontal dual bar graph frame.
 
         Draw a horizontal dual bar graph frame. Call this method
         outside of the main While loop to avoid unecessary redraws.
@@ -176,12 +213,12 @@ class SSD1306(framebuf.FrameBuffer):
             div_major_pos += 12 # 128 / 10 = ~12 divisions
 
         div_minor_pos = x + 10
-        while div_minor_pos <= (self.width -10):
+        while div_minor_pos <= (self.width - 10):
             line(div_minor_pos, y + 14, div_minor_pos, y + 18, 1)
             div_minor_pos += 6 # 128 / 20 = ~6 divisions
 
     def h_dual_bar_graph_data(self, v1: int, v2: int, rect, vline, x=0, y=0):
-        """Draw horizontal bar graph data.
+        """Draw dual horizontal bar graph data.
 
         Draw the horizontal dual bar graph data. The last maximum value for each bar
         graph renders as a memory line.
@@ -199,6 +236,7 @@ class SSD1306(framebuf.FrameBuffer):
         # clear bars
         rect(11, 4, w, 5, 0, True)
         rect(11, 24, w, 5, 0, True)
+
         # draw bars
         rect(11, 4, v1, 5, 1, True)
         rect(11, 24, v2, 5, 1, True)
