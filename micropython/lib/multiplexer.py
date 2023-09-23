@@ -70,7 +70,7 @@ class I2CMultiplexer:
         self.channel = ch
         self.device = self.device_reg[self.channel][-1]
 
-    def next_device(self):
+    def next_channel(self):
         """
         Select the next channel.
         """
@@ -82,7 +82,7 @@ class I2CMultiplexer:
             ch_index = 0
             self.select_channel(self.active_channels[ch_index])
 
-    def previous_device(self):
+    def previous_channel(self):
         """
         Select the previous channel.
         """
