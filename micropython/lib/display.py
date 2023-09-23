@@ -33,6 +33,9 @@ class SSD1306(framebuf.FrameBuffer):
         self.buffer = bytearray(self.pages * self.width)
         super().__init__(self.buffer, self.width, self.height, framebuf.MONO_VLSB)
         self.temp_bar_max = arr.array('i', [0, 0])
+        self._fdata = [] # list of actual font data type bytes
+        self._finfo = {} # dict for font info
+        self._fmagickey = bytes([0x21, 0x46, 0x44, 0x01]) # magic key for fonts
         self.init_display()
 
     def init_display(self):
@@ -249,45 +252,65 @@ class SSD1306(framebuf.FrameBuffer):
         vline(x + self.temp_bar_max[0] + 10, y + 4, 5, 1)
         vline(x + self.temp_bar_max[1] + 10, y + 24, 5, 1)
 
-    def fw_char(self, c, font, x=0, y=0):
-        pixel = self.pixel
-        colors = (0xffff, 0xffff, 0, 0)
+    def fw_char(self, char, x, y):
+        """
+        Draw a single char from the loaded font into the framebuffer.
+        """
+        return
 
-        # for c in string:
-        if not c in font.keys():
-            return 0
+    def load_font(self, name):
+        self._fontbuffer = bytearray[1]
+        # init self._fontbuf to size 1
+        self._read_font_file(name)
 
-        row = y
-        _w, * _font = font[c]
-        r = range(x, x + _w)
-        for byte in _font:
-            unsalted = byte
-            for col in r:
-                color = colors[unsalted & 0x03]
-                pixel(col, row, color)
-                unsalted >>= 2
-            row += 1
-        x += _w
+        return
+    
+    def load_fonts(self, names):
+        self._fontbuffer = bytearray[len(names)]
+        # init self._fontbuf to len(names)
+        r = range(len(names))
+        for i in r:
+            self._read_font_file(names[i])
 
-    def fw_text(self, s, font, x=0, y=0):
-        p = self.pixel
-        colors = (0xffff, 0xffff, 0, 0)
+        return
 
-        for c in s:
-            if not ord(c) in font.keys():
-                c = "?"
+    def _draw_font_data(self, data, x, y, w, h, scale=1):
+        return
 
-            row = y
-            _w, * _font = font[ord(c)]
-            r = range(x, x + _w)
-            for byte in _font:
-                unsalted = byte
-                for col in r:
-                    color = colors[unsalted & 0x03]
-                    p(col, row, color)
-                    unsalted >>= 2
-                row += 1
-            x += _w
+    def _get_char_data(self, cur, size):
+        return
+
+    def _read_font_file(self, s):
+        """
+        Read a .bin font file into memory. Copy the desired font
+        into to the lib folder.
+
+        :param s: Name of the desired font (String).
+        """
+        # oopen and validate font file
+        f = open(f'lib/{s}.bin', 'rb')
+        h = f.read(4)
+        if h != self._fmagickey:
+            raise Exception("Invalid magic key")
+
+        # read font data
+        self._finfo[s + '_width'] = f.read(1)[0]
+        self._finfo[s + '_height'] = f.read(1)[0]
+        self._finfo[s + 'datasize'] = f.read(1)[0]
+        self._finfo[s + '_entries'] = f.read(1)[0]
+        # load the rest of the file into the font buffer
+        self._fdata.append(f.read()) 
+        self._finfo[s + '_dataindex'] = len(self._fbuffer) - 1
+        self._finfo[s + '_descender'] = self._get_descender()
+
+    def _get_descender(self, fdata):
+        max_h = 0 # maximum height
+        cur = 0 # cursor
+        c = fdata[cur]
+        size = fdata[cur + 1]
+        while c != None:
+            d = self._get_char_data(cur, size)
+        return
 
 
 class SSD1306_I2C(SSD1306):
