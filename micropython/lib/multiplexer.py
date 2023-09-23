@@ -24,9 +24,14 @@ class I2CMultiplexer:
         self._init_multiplexer()
 
     def register_device(self, addr: int, ch: int, name: str, device):
-        """
-        Register an I2C device on a given multiplexer channel with the
-        device register.
+        """Register an I2C device.
+
+        Register an initialized device to the multiplexer's device register.
+
+        :param addr: The device address (e.g. 0x70).
+        :param ch: The device channel.
+        :param name: The device name.
+        :param device: Instance of the initialized device.
         """
         dev_reg = self.device_reg
         if dev_reg.get(ch) is None:
@@ -37,8 +42,14 @@ class I2CMultiplexer:
             dev_reg[ch][2].append(device)
 
     def get_device_address(self, ch: int):
-        """
-        Get the device address.
+        """ Get the device address.
+
+        Get the address or addresses of all devices on a given
+        channel.
+        
+        :param ch: The device channel.
+        :return: List of device addresses.
+        :rtype: list
         """
         self._set_channel(ch)
         scan_res = self.multiplexer.scan()
@@ -48,9 +59,12 @@ class I2CMultiplexer:
         return scan_res
 
     def select_channel(self, ch: int):
-        """
+        """ Select a channel.
+
         Select a channel (0 through 7). Access the list
         of connected devices with the `device` attribute.
+
+        :param ch: The device channel.
         """
         self._set_channel(ch)
         self.channel = ch
@@ -81,8 +95,7 @@ class I2CMultiplexer:
             self.select_channel(self.active_channels[ch_index])
 
     def _init_multiplexer(self):
-        """
-        Initialize the I2C multiplexer.
+        """Initialize the I2C multiplexer.
         """
         # fetch methods and vars
         buf = self._buf
@@ -111,7 +124,7 @@ class I2CMultiplexer:
         self._set_channel(self.active_channels[0])
 
     def _set_channel(self, ch: int):
-        """
+        """Set the multiplexer channel.
         """
         # fetch the temp buffer
         buf = self._buf
