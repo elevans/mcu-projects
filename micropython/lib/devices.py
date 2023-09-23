@@ -13,7 +13,7 @@ def init_i2c_multiplexer(mux: I2C):
     return I2CMultiplexer(mux)
 
 
-def init_display(w: int, h: int, protocol: str, i2c: I2C):
+def init_ssd1306_display(w: int, h: int, protocol: str, i2c: I2C):
     """Initialize an SSD1306 display.
 
     Initialize an SSD1306 display with the specified protocol
