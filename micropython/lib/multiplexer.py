@@ -71,8 +71,10 @@ class I2CMultiplexer:
         self.device = self.device_reg[self.channel][-1]
 
     def next_channel(self):
-        """
-        Select the next channel.
+        """Select the next channel.
+
+        Select the next channel from the available active channels on the
+        multiplexer.
         """
         ch_index = self.active_channels.index(self.channel)
         if ch_index >= 0 and ch_index < len(self.active_channels):
@@ -83,8 +85,10 @@ class I2CMultiplexer:
             self.select_channel(self.active_channels[ch_index])
 
     def previous_channel(self):
-        """
-        Select the previous channel.
+        """Select the previous channel.
+
+        Select the previous channel from the available active channels on the
+        multiplexer.
         """
         ch_index = self.active_channels.index(self.channel)
         if ch_index >= 0 and ch_index < len(self.active_channels):
