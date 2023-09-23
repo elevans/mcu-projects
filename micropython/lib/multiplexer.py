@@ -1,71 +1,60 @@
-import displayed
-import sensors
+from lib.addresses import device_address
 from machine import Pin, I2C
-from micropython import const
 
-# addresses
-MULTIPLEXER_ADDRESS = const(0x70)
-#BH1750VI_ADDRESS = const(0x00)
-HDC1080_ADDRESS = const(0x40)
-SSD1306_ADDRESS = const(0x3C)
+MULTIPLEXER_ADDRESS = device_address.get("TCA9548")
 
-# i2c config
-FREQUENCY_STANDARD = const(100000)
-FREQUENCY_FAST = const(400000)
+class I2CMultiplexer:
+    """I2C Multiplexer.
 
-# device library
-DEVICE_LIBRARY = {
-    HDC1080_ADDRESS: "sensor (hdc1080)",
-    SSD1306_ADDRESS: "display (ssd1306)"
-}
+    This class provides control methods for an I2C Multiplexer.
 
-# device settings
-DISPLAY_WIDTH = const(128)
-DISPLAY_HEIGHT = const(32)
-
-class Multiplexer:
-    def __init__(self, i2c):
-        # TODO: Update docstrings
-        # TODO: Implement multi-channel
-        """Multiplexer helper methods.
-
-        Adds helpful multiplexer control methods (e.g. next_device()) and
-        auto detection of connected I2C devices.
-
-        :param i2c_id: ID of the I2C port
-        :param scl_pin: SCL Pin.
-        :param sda_pin: SDA Pin.
-        :param freq: I2C device frequency (100 kHz or 400 kHz).
+    :param i2c: An instance of `machine.I2C`.
+    """
+    def __init__(self, i2c: I2C):
+        """Constructor method
         """
         self.device = None # access the channel's device instance
         self.active_channels = bytearray() # array of active channels - for valid channel options
         self.inactive_channels = bytearray() # array of inactive channels - for skpping
         self.channel = 0 # current channel selected on multiplexer
-        self.device_map = {} # dict that stores device instances, keys are channel
         self.multiplexer = i2c # access to the multiplexer itself
-        self.device_id = {} # dict that stores device id, keys are channel
-        self._chs = bytearray(8)
+        self.device_reg = {} # dict that stores device id, keys are channel
+        self._chs = bytearray(8) # pre-allocate an 8 byte buffer for channel control register
         self._buf = bytearray(1) # pre-allocate a 1 byte temp buffer
         self._init_multiplexer()
 
+    def register_device(self, addr: int, ch: int, name: str, device):
+        """
+        Register an I2C device on a given multiplexer channel with the
+        device register.
+        """
+        dev_reg = self.device_reg
+        if dev_reg.get(ch) is None:
+            dev_reg[ch] = ([name], [addr], [device])
+        else:
+            dev_reg[ch][0].append(name)
+            dev_reg[ch][1].append(addr)
+            dev_reg[ch][2].append(device)
+
+    def get_device_address(self, ch: int):
+        """
+        Get the device address.
+        """
+        self._set_channel(ch)
+        scan_res = self.multiplexer.scan()
+        scan_res.remove(MULTIPLEXER_ADDRESS)
+        self._set_channel(self.channel)
+
+        return scan_res
+
     def select_channel(self, ch: int):
         """
-        Select a channel (0 through 7).
+        Select a channel (0 through 7). Access the list
+        of connected devices with the `device` attribute.
         """
-        buf = self._buf
-        if ch >= 0 and ch < 8:
-            buf[0] = self._chs[ch]
-            self.multiplexer.writeto(MULTIPLEXER_ADDRESS, buf)
-        
+        self._set_channel(ch)
         self.channel = ch
-        self.device = self.device_map[self.channel]
-
-    def select_multiple_channels(self, chs: bytearray):
-        """
-        Select multiple channels (0 through 7).
-        """
-        # XOR the bytes in the passed together!
-        return
+        self.device = self.device_reg[self.channel][-1]
 
     def next_device(self):
         """
@@ -95,60 +84,37 @@ class Multiplexer:
         """
         Initialize the I2C multiplexer.
         """
-        # pre-compute channels into bytearray
+        # fetch methods and vars
+        buf = self._buf
         chs = self._chs
+        a_chs = self.active_channels
+        i_chs = self.inactive_channels
+        scan = self.multiplexer.scan
+        write = self.multiplexer.writeto
+
+        # initialize control register
         r = range(8)
         for i in r:
             chs[i] = 1 << i
 
-        self._init_connected_devices()
-        self.select_channel(self.active_channels[0])
+        # find channels with connected devices
+        for j in r:
+            buf[0] = chs[j]
+            write(MULTIPLEXER_ADDRESS, buf) # select channel j on the mux
+            scan_res = scan()
+            if len(scan_res) > 1:
+                a_chs.append(j)
+            else:
+                i_chs.append(j)
 
-    def _init_connected_devices(self):
+        # default to first channel
+        self._set_channel(self.active_channels[0])
+
+    def _set_channel(self, ch: int):
         """
-        Initialize the devices connected to the multiplexer. Note,
-        only devices that are in the device library will be connected.
-        Added the deivce address to the device library to connect the
-        desired device. This method expects one device per channel.
         """
-        # fetch methods and vars
+        # fetch the temp buffer
         buf = self._buf
-        chs = self._chs
-        write = self.multiplexer.writeto
-        scan = self.multiplexer.scan
-        init_device = self._init_device
-        a_chs = self.active_channels
-        i_chs = self.inactive_channels
-        device_id = self.device_id
-
-        # find connected devices
-        r = range(8)
-        for i in r:
-            buf[0] = chs[i]
-            write(MULTIPLEXER_ADDRESS, buf)
-            scan_out = scan()
-            scan_out.remove(MULTIPLEXER_ADDRESS)
-            for j in range(len(scan_out)):
-                if scan_out[j] in DEVICE_LIBRARY:
-                    init_device(scan_out[j], i)
-                    a_chs.append(i)
-                    device_id[i] = DEVICE_LIBRARY[scan_out[j]]
-                elif len(scan_out) == 0:
-                    i_chs.append(i)
-                else:
-                    device_id[i] = f"unknown device (addr: {scan_out[j]})"
-
-    def _init_device(self, addr, ch):
-        """
-        Setup routines for individual devices.
-        """
-        # initialize display (ssd1306)
-        if addr == SSD1306_ADDRESS:
-            device = displayed.SSD1306_I2C(DISPLAY_WIDTH, DISPLAY_HEIGHT, self.multiplexer)
-            device.fill(0)
-            self.device_map[ch] = device
-        
-        # initialize sensors (hdc1080)
-        if addr == HDC1080_ADDRESS:
-            device = sensors.HDC1080(self.multiplexer)
-            self.device_map[ch] = device
+        if ch >= 0 and ch < 8:
+            buf[0] = self._chs[ch]
+            self.multiplexer.writeto(MULTIPLEXER_ADDRESS, buf)
