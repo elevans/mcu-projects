@@ -1,6 +1,14 @@
 import lib.display as display
-from lib.multiplexer import I2CMultiplexer
-from machine import I2C
+import lib.multiplexer as multiplexer
+from machine import I2C, Pin
+
+
+def init_analog_multiplexer(s0: Pin, s1: Pin, s2: Pin, s3: Pin):
+    """Initialize an analog multiplexer.
+
+    Initialize an analog multiplexer (e.g. a CD74HC4067).
+    """
+    return multiplexer.AnalogMultiplexer(s0, s1, s3, s3)
 
 
 def init_i2c_multiplexer(mux: I2C):
@@ -10,7 +18,7 @@ def init_i2c_multiplexer(mux: I2C):
 
     :param mux: A machine.I2C instance for the multiplexer.
     """
-    return I2CMultiplexer(mux)
+    return multiplexer.I2CMultiplexer(mux)
 
 
 def init_ssd1306_display(w: int, h: int, protocol: str, i2c: I2C):

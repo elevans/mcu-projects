@@ -1,7 +1,52 @@
 from lib.addresses import device_address
 from machine import Pin, I2C
 
-MULTIPLEXER_ADDRESS = device_address.get("TCA9548")
+I2C_MULTIPLEXER_ADDRESS = device_address.get("TCA9548")
+
+class AnalogMultiplexer:
+    """Analog Multiplexer.
+
+    This class provides control methods for an analog Multiplexer.
+
+    :param s0: S0 machine.Pin instance.
+    :param s1: S1 machine.Pin instance.
+    :param s2: S2 machine.Pin instance.
+    :param s3: S3 machine.Pin instance.
+    """
+    def __init__(self, s0: Pin, s1: Pin, s2: Pin, s3: Pin):
+        """Constructor method
+        """
+        self.s0 = s0
+        self.s1 = s1
+        self.s2 = s2
+        self.s3 = s3
+        self._ch_reg = {} # dict for the channel register
+        self._init_multiplexer()
+
+    def select_channel(self, ch: int):
+        """Select a channel
+        """
+        # get and set channel pin config
+        ch_conf = self.ch_reg.get(ch)
+        self.s0.value(ch_conf[0])
+        self.s1.value(ch_conf[1])
+        self.s2.value(ch_conf[2])
+        self.s3.value(ch_conf[3])
+
+    def _init_multiplexer(self):
+        """Initialize the analog multiplexer.
+        """
+        # cache references as local var
+        ch_reg = self._ch_reg
+        # create the channel register
+        r = range(2)
+        for s3 in r:
+            for s2 in r:
+                for s1 in r:
+                    for s0 in r:
+                        ch = s3 * 8 + s2 * 4 + s1 * 2 + s0
+                        row = bytes([s0, s1, s2, s3])
+                        ch_reg[ch] = row
 
 class I2CMultiplexer:
     """I2C Multiplexer.
@@ -53,7 +98,7 @@ class I2CMultiplexer:
         """
         self._set_channel(ch)
         scan_res = self.multiplexer.scan()
-        scan_res.remove(MULTIPLEXER_ADDRESS)
+        scan_res.remove(I2CMULTIPLEXER_ADDRESS)
         self._set_channel(self.channel)
 
         return scan_res
@@ -117,7 +162,7 @@ class I2CMultiplexer:
         # find channels with connected devices
         for j in r:
             buf[0] = chs[j]
-            write(MULTIPLEXER_ADDRESS, buf) # select channel j on the mux
+            write(I2CMULTIPLEXER_ADDRESS, buf) # select channel j on the mux
             scan_res = scan()
             if len(scan_res) > 1:
                 a_chs.append(j)
@@ -134,4 +179,4 @@ class I2CMultiplexer:
         buf = self._buf
         if ch >= 0 and ch < 8:
             buf[0] = self._chs[ch]
-            self.multiplexer.writeto(MULTIPLEXER_ADDRESS, buf)
+            self.multiplexer.writeto(I2CMULTIPLEXER_ADDRESS, buf)
