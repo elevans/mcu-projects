@@ -1,4 +1,4 @@
-from lib.addresses import device_address
+from mcuexlib.addresses import device_address
 from machine import Pin, I2C
 
 I2C_MULTIPLEXER_ADDRESS = device_address.get("TCA9548")
@@ -8,23 +8,29 @@ class AnalogMultiplexer:
 
     This class provides control methods for an analog Multiplexer.
 
-    :param s0: S0 machine.Pin instance.
-    :param s1: S1 machine.Pin instance.
-    :param s2: S2 machine.Pin instance.
-    :param s3: S3 machine.Pin instance.
+    :param s0: Select pin 0.
+    :param s1: Select pin 1.
+    :param s2: Select pin 2.
+    :param s3: Select pin 3.
+    :param sig: The common or IO pin.
     """
-    def __init__(self, s0: Pin, s1: Pin, s2: Pin, s3: Pin):
+    def __init__(self, s0: Pin, s1: Pin, s2: Pin, s3: Pin, sig: Pin):
         """Constructor method
         """
         self.s0 = s0
         self.s1 = s1
         self.s2 = s2
         self.s3 = s3
+        self.sig = sig
         self._ch_reg = {} # dict for the channel register
         self._init_multiplexer()
 
     def select_channel(self, ch: int):
-        """Select a channel
+        """Select a channel.
+
+        Select a channel on the multiplexer.
+
+        :param ch: A channel
         """
         # get and set channel pin config
         ch_conf = self.ch_reg.get(ch)
