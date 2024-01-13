@@ -46,9 +46,13 @@ CH1_HIGH_PRIORITY = const(0x1)
 CH1_EN = const(0x1)
 
 
-def stream(arr, nword):
+def memory_stream(arr, nword):
     """
     Start the DMA stream.
+
+    Chain 0 reads data from the given array and transfers
+    32-bit words to the PIO FIFO. Chain 1 restarts chain 0
+    on completion.
     """
     # get memory address of input array
     arr_addr = addressof(arr)
