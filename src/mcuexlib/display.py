@@ -37,6 +37,7 @@ class SSD1306(framebuf.FrameBuffer):
         self._finfo = {} # dict for font info
         self._fmagickey = bytes([0x21, 0x46, 0x44, 0x01]) # magic key for fonts
         self.init_display()
+        self.graph = Graph(self) # attah graphing methods
 
     def init_display(self):
         for cmd in (
@@ -345,3 +346,39 @@ class SSD1306_SPI(SSD1306):
         self.cs(0)
         self.spi.write(buf)
         self.cs(1)
+
+
+class Graph():
+    def __init__(self, fb):
+        self._fb = fb
+        self._bar_buff = arr.array('H', [0] * 5) # store up to 5 uint16 numbers
+
+    def bar(
+            self,
+            v: int,
+            xs: int,
+            ys: int,
+            xe: int,
+            h: int,
+            id: int = 0
+            ):
+        """
+        Render a bar in the frambuffer.
+
+        :param v: uint16 integer value.
+        :param xs: Starting X position (lower left).
+        :param ys: Starting Y position (lower left).
+        :param xe: Ending X Position (lower right).
+        :param h: Height of the bar in pixels.
+        :param id: Bar ID number (default=0).
+        """
+
+        # compute bar width
+        bdiv = xe - xs
+        bv = int(((v * bdiv) / 65535) + 0.5)
+
+        # clear and draw bar
+        self._fb.rect(xs, ys, bdiv, h, 0, True)
+        self._fb.rect(xs, ys, bv, h, 1, True)
+
+        # logic for max bar
