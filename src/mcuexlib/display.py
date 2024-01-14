@@ -277,9 +277,9 @@ class Graph():
     def bar(
             self,
             v: int,
-            xs: int,
-            ys: int,
-            xe: int,
+            x: int,
+            y: int,
+            l: int,
             h: int,
             id: int = 0
             ):
@@ -287,19 +287,20 @@ class Graph():
         Render a bar in the frambuffer.
 
         :param v: uint16 integer value.
-        :param xs: Starting X position (lower left).
-        :param ys: Starting Y position (lower left).
-        :param xe: Ending X Position (lower right).
+        :param x: Starting X position (lower left).
+        :param y: Starting Y position (lower left).
+        :param l: Length of the total bar in pixels.
         :param h: Height of the bar in pixels.
         :param id: Bar ID number (default=0).
         """
 
         # compute bar width
-        bdiv = xe - xs
-        bv = int(((v * bdiv) / 65535) + 0.5)
+        bv = int(((v * l) / 65535) + 0.5)
 
         # clear and draw bar
-        self._fb.rect(xs, ys, bdiv, h, 0, True)
-        self._fb.rect(xs, ys, bv, h, 1, True)
+        self._fb.rect(x, y, l, h, 0, True)
+        self._fb.rect(x, y, bv, h, 1, True)
 
         # logic for max bar
+
+
