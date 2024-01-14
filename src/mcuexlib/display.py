@@ -32,7 +32,6 @@ class SSD1306(framebuf.FrameBuffer):
         self.pages = self.height // 8
         self.buffer = bytearray(self.pages * self.width)
         super().__init__(self.buffer, self.width, self.height, framebuf.MONO_VLSB)
-        self.temp_bar_max = arr.array('i', [0, 0])
         self._fdata = [] # list of actual font data type bytes
         self._finfo = {} # dict for font info
         self._fmagickey = bytes([0x21, 0x46, 0x44, 0x01]) # magic key for fonts
@@ -174,84 +173,6 @@ class SSD1306(framebuf.FrameBuffer):
         while div_minor_pos <= (w - 10):
             line(div_minor_pos, y + 22, div_minor_pos, y + 26, 1)
             div_minor_pos += round((w - 10)/20)
-
-    def h_bar_graph_data(self, v: int, rect, x=0, y=0):
-        """Draw horizontal bar graph data.
-
-        :param v: Analog pin reads.
-        """
-        # fetch vars
-        w = self.width - 1
-
-        # clear bar
-        rect(x + 10, y + 11, w - 20, 5, 0, True)
-
-        # draw bar
-        rect(x + 10, y + 11, round(((w - 20) / 65536) * v), 5, 1, True)
-
-    def h_dual_bar_graph_frame(self, s1, s2, x=0, y=0):
-        """Draw a horizontal dual bar graph frame.
-
-        Draw a horizontal dual bar graph frame. Call this method
-        outside of the main While loop to avoid unecessary redraws.
-
-        :param s1: String for bar graph 1 (top).
-        :param s2: String for bar graph 2 (bottom).
-        :param x: X-axis coordinate to begin drawing the bar graph frame (default=0).
-        :param y: Y-axis coordinate to begin drawing the bar graph frame (default=0).
-        """
-        # fetch methods
-        line = self.line
-        text = self.text
-
-        # draw frame and labels
-        line(x + 10, y + 0, x + 10, y + 32, 1)
-        line(x + 10, y + 16, self.width, y + 16, 1)
-        text(s1, 0, 4)
-        text(s2, 0, 24)
-
-        # draw major and minor divisions on x axis
-        div_major_pos = x + 10
-        while div_major_pos <= (self.width - 10):
-            line(div_major_pos, y + 12, div_major_pos, y + 20, 1)
-            div_major_pos += 12 # 128 / 10 = ~12 divisions
-
-        div_minor_pos = x + 10
-        while div_minor_pos <= (self.width - 10):
-            line(div_minor_pos, y + 14, div_minor_pos, y + 18, 1)
-            div_minor_pos += 6 # 128 / 20 = ~6 divisions
-
-    def h_dual_bar_graph_data(self, v1: int, v2: int, rect, vline, x=0, y=0):
-        """Draw dual horizontal bar graph data.
-
-        Draw the horizontal dual bar graph data. The last maximum value for each bar
-        graph renders as a memory line.
-
-        :param v1: Value of bar graph 1 (top).
-        :param v2: Value of bar graph 2 (bottom).
-        :param rect: The display's instance of rect (avoids look ups in While loops).
-        :param vline: The display's instance of vline (avoids look ups in while loops).
-        :param x: X-axis coordinate to begin drawing bar graph data (default=0).
-        :param y: Y-axis coordinate to begin drawing bar graph data (default=0).
-        """
-        # fetch vars
-        w = self.width - 1
-
-        # clear bars
-        rect(11, 4, w, 5, 0, True)
-        rect(11, 24, w, 5, 0, True)
-
-        # draw bars
-        rect(11, 4, v1, 5, 1, True)
-        rect(11, 24, v2, 5, 1, True)
-
-        # draw/update max memory line
-        if v1 > self.temp_bar_max[0]:
-            self.temp_bar_max[0] = v1
-        if v2 > self.temp_bar_max[1]:
-            self.temp_bar_max[1] = v2
-        vline(x + self.temp_bar_max[0] + 10, y + 4, 5, 1)
-        vline(x + self.temp_bar_max[1] + 10, y + 24, 5, 1)
 
     def fw_char(self, c, font, x=0, y=0):
         pixel = self.pixel
