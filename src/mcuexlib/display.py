@@ -303,4 +303,108 @@ class Graph():
 
         # logic for max bar
 
+    def scale(
+            self,
+            x: int,
+            y: int,
+            l: int,
+            w: int,
+            p: str,
+            o: str,
+            ):
+        """
+        Render a scale frame in the frambuffer.
 
+        :param x: Scale frame X origin.
+        :param y: Scale frame y origin.
+        :param l: Length of the frame in pixels.
+        :param w: Width or height of the scale base.
+        :param p: Position of the scale relative to the base.
+            Valid options are: "t", "c", "b".
+        :param o: Orientation of the scale. Valid options are:
+            "h", "v".
+        """
+        if o == "h":
+            self._h_scale(x, y, l, w, p)
+        #elif o == "v":
+        #    self._v_scale(x, y, l, w, p)
+        else:
+            self._fb.text(f"Invalid orientation: {o}", 0, 0)
+
+    def _h_scale(
+            self,
+            x: int,
+            y: int,
+            l: int,
+            w: int,
+            p: str,
+    ):
+        # base line
+        self._fb.vline(x, y, w, 1)
+
+        # scale line
+        if p == "t": # top
+            self._fb.hline(x, y, l, 1)
+            self._h_major_ticks(x, y, l, p)
+            self._h_minor_ticks(x, y, l, p)
+        elif p == "b": # bottom
+            self._fb.hline(x, y + w, l, 1)
+            self._h_major_ticks(x, y + w, l, p)
+            self._h_minor_ticks(x, y + w, l, p)
+        elif p == "c": # center
+            c = int((w / 2) + 0.5)
+            self._fb.hline(x, y + c, l, 1)
+            self._h_major_ticks(x, y + c, l, p)
+            self._h_minor_ticks(x, y + c, l, p)
+        else:
+            self._fb.text(f"Invalid position: {p}", 0, 0)
+
+    def _h_major_ticks(self, x, y, l, p):
+        # tick mark details
+        div = l // 10
+        ndivs = l // div
+        th = 6 # tick height in pixels
+        tn = 0 # tick number
+        tp = x + div # tick position
+
+        # draw tick marks
+        if p == "t":
+            while tn < ndivs:
+                self._fb.vline(tp, y, th, 1)
+                tp += div
+                tn += 1
+        if p == "b":
+            while tn < ndivs:
+                self._fb.vline(tp, y - th, th + 1, 1)
+                tp += div
+                tn += 1
+        if p == "c":
+            while tn < ndivs:
+                self._fb.vline(tp, y - th, 2 * th, 1)
+                tp += div
+                tn += 1
+
+    def _h_minor_ticks(self, x, y, l, p):
+        # tick mark details
+        div = (l // 10) // 2
+        ndivs = l // div
+        th = 3 # tick height in pixels
+        tn = 0 # tick number
+        tp = x + div # tick position
+
+        # draw tick marks
+        if p == "t":
+            while tn < ndivs - 1:
+                self._fb.vline(tp, y, th, 1)
+                tp += div
+                tn += 1
+        if p == "b":
+            while tn < ndivs - 1:
+                self._fb.vline(tp, y - th, th + 1, 1)
+                tp += div
+                tn += 1
+        if p == "c":
+            while tn < ndivs - 1:
+                self._fb.vline(tp, y - th, 2 * th, 1)
+                tp += div
+                tn += 1
