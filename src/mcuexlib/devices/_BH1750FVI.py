@@ -1,5 +1,5 @@
 from micropython import const
-from utim import sleep_ms
+from utime import sleep_ms
 
 ADDR_H = const(0x5C)
 ADDR_L = const(0x23)
@@ -16,7 +16,7 @@ CONFIG_ONCE_L_RES = const(0x23)
 class BH1750FVI:
     """
     """
-    def __init__(selfi, i2c, addr):
+    def __init__(self, i2c, addr):
         self.i2c = i2c
         self.addr = ADDR_L if addr is None else addr
         self._init_device()
