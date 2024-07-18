@@ -1,25 +1,28 @@
 import time
 from micropython import const
 
-HDC1080_ADDRESS = const(0x40)
-HDC1080_TEMP_REG = const(0x00)
-HDC1080_HUM_REG = const(0x01)
+ADDR = const(0x40)
+CTRL_HUM_REG = const(0x01)
+CTRL_TEMP_REG = const(0x00)
 HDC1080_CONFIG_REG = const(0x02)
 HDC1080_CONFIG = const(0x00)
-HDC1080_MANUFACTURER_ID = const(0xFE)
-HDC1080_DEVICE_ID = const(0xFF)
-HDC1080_SERIAL_ID_FIRST = const(0xFB)
-HDC1080_SERIAL_ID_MID = const(0xFC)
-HDC1080_SERIAL_ID_LAST = const(0xFD)
 
 class HDC1080:
-    """
-    HDC1080 Texas Instruments Temperature/Humidity sensor. HDC1080 measurement conversion time
-    is 6.35 ms, however actual conversion time takes ~12 ms. A delay of 15 ms is used to ensure
-    enough time has elapsed for a measurement conversion.
-    """
     def __init__(self, i2c):
+        """MicroPython driver for the HDC1080 temperature/humidity sensor.
+
+        This class is a MicroPython driver for the HDC1080 14-bit
+        temperature and humidity sensor. Initialize this class with
+        the machine.I2C object configured with the appropriate Pin
+        and frequency settings.
+
+        :param i2c:
+
+            machine.I2C instance for the conencted device.
+        """
         self.i2c = i2c
+        self._addr = ADDR
+        self._t
         self._t_reg_buf = bytes([HDC1080_TEMP_REG])
         self._h_reg_buf = bytes([HDC1080_HUM_REG])
         self._init_device()
@@ -32,7 +35,7 @@ class HDC1080:
             | Hum resolution: 0 (14 bit)
         """
         self.i2c.writeto_mem(
-            HDC1080_ADDRESS,
+            self._addr,
             HDC1080_CONFIG_REG,
             bytes([HDC1080_CONFIG])
             )
@@ -43,13 +46,18 @@ class HDC1080:
         Read the temperature and return in Celcius, Fahrenheit or the raw
         value.
 
-        :param unit: Set the unit of the temperature read
-        :return: Temperature in specified unit
+        :param unit:
+
+            Set the unit of the temperature read.
+        
+        :return:
+
+            Temperature in specified unit.
         """
         # point to temperature register
-        self.i2c.writeto(HDC1080_ADDRESS, self._t_reg_buf)
+        self.i2c.writeto(self._addr, self._t_reg_buf)
         time.sleep(0.015)
-        v = int.from_bytes(self.i2c.readfrom(HDC1080_ADDRESS, 2), "big")
+        v = int.from_bytes(self.i2c.readfrom(self._addr, 2), "big")
         if unit == "c":
             return (v / 2 ** 16) * 165 - 40
         elif unit == "f":
@@ -65,9 +73,9 @@ class HDC1080:
         :return: Relative humidity percent
         """
         # point to humidity register
-        self.i2c.writeto(HDC1080_ADDRESS, self._h_reg_buf)
+        self.i2c.writeto(self._addr, self._h_reg_buf)
         time.sleep(0.015)
-        value = int.from_bytes(self.i2c.readfrom(HDC1080_ADDRESS, 2), "big")
+        value = int.from_bytes(self.i2c.readfrom(self._addr, 2), "big")
         
         return (value / 2 ** 16) * 100
 
