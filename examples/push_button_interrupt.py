@@ -21,7 +21,7 @@ def btn_push_interrupt(pin):
         sleep_ms(1)
     
     # toggle between 0 and 1
-    btn_st = btn_st ^ 1
+    btn_st ^= 1
 
 # config pins
 btn = Pin(14, Pin.IN)
