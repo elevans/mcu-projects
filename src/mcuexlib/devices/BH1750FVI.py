@@ -3,15 +3,15 @@ from utime import sleep_ms
 
 ADDR_H = const(0x5C)
 ADDR_L = const(0x23)
-CTRL_POWER_ON = const(0x01)
-CTRL_POWER_OFF = const(0x00)
-CTRL_RESET = const(0x07)
-CONFIG_CONT_H_RES_1 = const(0x10)
-CONFIG_CONT_H_RES_2 = const(0x11)
-CONFIG_CONT_L_RES = const(0x13)
-CONFIG_ONCE_H_RES_1 = const(0x20)
-CONFIG_ONCE_H_RES_2 = const(0x21)
-CONFIG_ONCE_L_RES = const(0x23)
+CMD_POWER_ON = const(0x01)
+CMD_POWER_OFF = const(0x00)
+CMD_RESET = const(0x07)
+SET_CONT_H_RES_1 = const(0x10)
+SET_CONT_H_RES_2 = const(0x11)
+SET_CONT_L_RES = const(0x13)
+SET_ONCE_H_RES_1 = const(0x20)
+SET_ONCE_H_RES_2 = const(0x21)
+SET_ONCE_L_RES = const(0x23)
 
 class BH1750FVI:
     def __init__(self, i2c, addr_config: str = None):
@@ -38,15 +38,15 @@ class BH1750FVI:
         self.config = addr_config
         self._addr = None
         self._buf = bytearray(2) # read buffer
-        self._byte_power_on = bytes([CTRL_POWER_ON])
-        self._byte_power_off = bytes([CTRL_POWER_OFF])
-        self._byte_reset = bytes([CTRL_RESET])
-        self._byte_cont_hres1 = bytes([CONFIG_CONT_H_RES_1])
-        self._byte_cont_hres2 = bytes([CONFIG_CONT_H_RES_2])
-        self._byte_cont_lres = bytes([CONFIG_CONT_L_RES])
-        self._byte_once_hres1 = bytes([CONFIG_ONCE_H_RES_1])
-        self._byte_once_hres2 = bytes([CONFIG_ONCE_H_RES_2])
-        self._byte_once_lres = bytes([CONFIG_ONCE_L_RES])
+        self._byte_power_on = bytes([CMD_POWER_ON])
+        self._byte_power_off = bytes([CMD_POWER_OFF])
+        self._byte_reset = bytes([CMD_RESET])
+        self._byte_cont_hres1 = bytes([SET_CONT_H_RES_1])
+        self._byte_cont_hres2 = bytes([SET_CONT_H_RES_2])
+        self._byte_cont_lres = bytes([SET_CONT_L_RES])
+        self._byte_once_hres1 = bytes([SET_ONCE_H_RES_1])
+        self._byte_once_hres2 = bytes([SET_ONCE_H_RES_2])
+        self._byte_once_lres = bytes([SET_ONCE_L_RES])
         self._init_device()
         
     def _init_device(self):

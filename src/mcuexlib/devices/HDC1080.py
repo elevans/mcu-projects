@@ -2,9 +2,9 @@ from micropython import const
 from utime import sleep_ms
 
 ADDR = const(0x40)
-CTRL_HUM = const(0x01)
-CTRL_TEMP = const(0x00)
-CONFIG_REG = const(0x02)
+CMD_HUM = const(0x01)
+CMD_TEMP = const(0x00)
+SET_CONFIG = const(0x02)
 
 class HDC1080:
     def __init__(self, i2c, mode: int = 0, heat: bool = False, tres: int = 14, hres: int = 14):
@@ -42,9 +42,9 @@ class HDC1080:
         """
         self.i2c = i2c
         self._addr = ADDR
-        self._byte_config_reg = bytes([CONFIG_REG])
-        self._byte_hum = bytes([CTRL_HUM])
-        self._byte_temp = bytes([CTRL_TEMP])
+        self._byte_config_reg = bytes([SET_CONFIG])
+        self._byte_hum = bytes([CMD_HUM])
+        self._byte_temp = bytes([CMD_TEMP])
         self._hres = hres
         self._tres = tres
         self._init_device(mode, heat, tres, hres)
@@ -72,7 +72,7 @@ class HDC1080:
         self.i2c.writeto_mem(self._addr, self._byte_config_reg)
         self.i2c.writeto_mem(
             self._addr,
-            CONFIG_REG,
+            SET_CONFIG,
             bytes([reg << 8])
             )
         # give the sensor 15 ms to start
