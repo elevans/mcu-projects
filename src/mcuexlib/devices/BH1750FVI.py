@@ -167,4 +167,4 @@ class BH1750FVI:
 
             Light measurement in "lx" units.
         """
-        return int.from_bytes(self._buf, "big") / 1.2
+        return int.from_bytes(self._buf, 2, "big") / 1.2
