@@ -6,12 +6,12 @@ ADDR_L = const(0x23)
 CMD_POWER_ON = const(0x01)
 CMD_POWER_OFF = const(0x00)
 CMD_RESET = const(0x07)
-SET_CONT_H_RES_1 = const(0x10)
-SET_CONT_H_RES_2 = const(0x11)
-SET_CONT_L_RES = const(0x13)
-SET_ONCE_H_RES_1 = const(0x20)
-SET_ONCE_H_RES_2 = const(0x21)
-SET_ONCE_L_RES = const(0x23)
+CMD_CONT_H_RES_1 = const(0x10)
+CMD_CONT_H_RES_2 = const(0x11)
+CMD_CONT_L_RES = const(0x13)
+CMD_ONCE_H_RES_1 = const(0x20)
+CMD_ONCE_H_RES_2 = const(0x21)
+CMD_ONCE_L_RES = const(0x23)
 
 class BH1750FVI:
     def __init__(self, i2c, addr_config: str = None):
@@ -38,15 +38,15 @@ class BH1750FVI:
         self.config = addr_config
         self._addr = None
         self._buf = bytearray(2) # read buffer
-        self._byte_power_on = bytes([CMD_POWER_ON])
-        self._byte_power_off = bytes([CMD_POWER_OFF])
-        self._byte_reset = bytes([CMD_RESET])
-        self._byte_cont_hres1 = bytes([SET_CONT_H_RES_1])
-        self._byte_cont_hres2 = bytes([SET_CONT_H_RES_2])
-        self._byte_cont_lres = bytes([SET_CONT_L_RES])
-        self._byte_once_hres1 = bytes([SET_ONCE_H_RES_1])
-        self._byte_once_hres2 = bytes([SET_ONCE_H_RES_2])
-        self._byte_once_lres = bytes([SET_ONCE_L_RES])
+        self._cmd_power_on = CMD_POWER_ON.to_bytes(1, 'big')
+        self._cmd_power_off = CMD_POWER_OFF.to_bytes(1, 'big')
+        self._cmd_reset = CMD_RESET.to_bytes(1, 'big')
+        self._cmd_cont_hres1 = CMD_CONT_H_RES_1.to_bytes(1, 'big')
+        self._cmd_cont_hres2 = CMD_CONT_H_RES_2.to_bytes(1, 'big')
+        self._cmd_cont_lres = CMD_CONT_L_RES.to_bytes(1, 'big')
+        self._cmd_once_hres1 = CMD_ONCE_H_RES_1.to_bytes(1, 'big')
+        self._cmd_once_hres2 = CMD_ONCE_H_RES_2.to_bytes(1, 'big')
+        self._cmd_once_lres = CMD_ONCE_L_RES.to_bytes(1, 'big')
         self._init_device()
         
     def _init_device(self):
@@ -99,17 +99,17 @@ class BH1750FVI:
         """
         if mode == "high1" or None:
             self.power_on()
-            self.i2c.writeto(self._addr, self._byte_once_hres1)
+            self.i2c.writeto(self._addr, self._cmd_once_hres1)
             sleep_ms(120)
             self.i2c.readfrom_into(self._buf)
         if mode == "high2":
             self.power_on()
-            self.i2c.writeto(self._addr, self._byte_once_hres2)
+            self.i2c.writeto(self._addr, self._cmd_once_hres2)
             sleep_ms(120)
             self.i2c.readfrom_into(self._buf)
         if mode == "low":
             self.power_on()
-            self.i2c.writeto(self._addr, self._byte_once_lres)
+            self.i2c.writeto(self._addr, self._cmd_once_lres)
             sleep_ms(16)
             self.i2c.readfrom_into(self._buf)
 
@@ -120,21 +120,21 @@ class BH1750FVI:
 
         Reset the device.
         """
-        self.i2c.writeto(self._addr, self._byte_reset)
+        self.i2c.writeto(self._addr, self._cmd_reset)
 
     def power_off(self):
         """Power off the BH1750FVI.
 
         Power off the device.
         """
-        self.i2c.writeto(self._addr, self._byte_power_off)
+        self.i2c.writeto(self._addr, self._cmd_power_off)
 
     def power_on(self):
         """Power on the BH1750FVI.
 
         Power on the device.
         """
-        self.i2c.writeto(self._addr, self._byte_power_on)
+        self.i2c.writeto(self._addr, self._cmd_power_on)
 
     def start_cont_read(self, mode: str = None):
         """Start continous reading state.
@@ -149,13 +149,13 @@ class BH1750FVI:
         """
         if mode == "high1" or None:
             self.power_on()
-            self.i2c.writeto(self._addr, self._byte_cont_hres1)
+            self.i2c.writeto(self._addr, self._cmd_cont_hres1)
         if mode == "high2":
             self.power_on()
-            self.i2c.writeto(self._addr, self._byte_cont_hres2)
+            self.i2c.writeto(self._addr, self._cmd_cont_hres2)
         if mode == "low":
             self.power_on()
-            self.i2c.writeto(self._addr, self._byte_cont_lres)
+            self.i2c.writeto(self._addr, self._cmd_cont_lres)
 
     def _buf_to_lx(self) -> float:
         """Convert the buffer into lx units.

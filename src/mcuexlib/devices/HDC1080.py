@@ -42,11 +42,10 @@ class HDC1080:
         """
         self.i2c = i2c
         self._addr = ADDR
-        self._byte_config_reg = bytes([SET_CONFIG])
-        self._byte_hum = bytes([CMD_HUM])
-        self._byte_temp = bytes([CMD_TEMP])
         self._hres = hres
         self._tres = tres
+        self._cmd_hum = CMD_HUM.to_bytes(1, 'big')
+        self._cmd_temp = CMD_TEMP.to_bytes(1, 'big')
         self._init_device(mode, heat, tres, hres)
 
     def _init_device(self, mode, heat, tres, hres):
@@ -68,13 +67,13 @@ class HDC1080:
             reg |= 0x1
         elif hres == 8:
             reg |= 0x2
-            
-        self.i2c.writeto_mem(self._addr, self._byte_config_reg)
+        reg <<= 8
+
         self.i2c.writeto_mem(
             self._addr,
             SET_CONFIG,
-            bytes([reg << 8])
-            )
+            reg.to_bytes(2, 'big'))
+
         # give the sensor 15 ms to start
         sleep_ms(15)
 
@@ -88,7 +87,7 @@ class HDC1080:
             Relative humidity percent.
         """
         # trigger a humidity measurement
-        self.i2c.writeto(self._addr, self._byte_hum)
+        self.i2c.writeto(self._addr, self._cmd_hum)
         # wait for measurement
         if self._hres == 8:
             sleep_ms(3)
@@ -97,7 +96,7 @@ class HDC1080:
         elif self._hres == 14:
             sleep_ms(7)
         
-        return (int.from_bytes(self.i2c.readfrom(self._addr, 2)) / 2 ** 16) * 100
+        return (int.from_bytes(self.i2c.readfrom(self._addr, 2), 2, 'big') / 2 ** 16) * 100
 
     def get_temp(self, unit: str = "c"):
         """Measure the temperature.
@@ -113,14 +112,14 @@ class HDC1080:
             Temperature measurement.
         """
         # trigger a temperature measurement
-        self.i2c.writeto(self._addr, self._byte_temp)
+        self.i2c.writeto(self._addr, self._cmd_temp)
         # wait for measurement
         if self._tres == 11:
             sleep_ms(4)
         elif self._tres == 14:
             sleep_ms(7)
 
-        t = int.from_bytes(self.i2c.readfrom(self._addr, 2))
+        t = int.from_bytes(self.i2c.readfrom(self._addr, 2), 2, 'big')
         if unit == "c":
             return (t / 2 ** 16) * 165 - 40
         else: 
@@ -142,6 +141,6 @@ class HDC1080:
             A Tuple containing the temperature and humidity values.
         """
         # trigger a temperature/humidity sequential measurement
-        self.i2c.writeto(self._addr, self._byte_temp)
+        self.i2c.writeto(self._addr, self._cmd_temp)
         return
 
